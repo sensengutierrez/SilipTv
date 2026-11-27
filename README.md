@@ -6,7 +6,11 @@ Walang pirated streams: ang pinapatugtog lang ay ang mga live na nilalabas mismo
 
 ## I-download
 
-Android (phone, tablet, Smart TV): https://github.com/sensengutierrez/SilipTV/releases/latest/download/SilipTV.apk
+Android (phone, tablet, Smart TV): https://github.com/sensengutierrez/SilipTv/releases/latest/download/SilipTV.apk
+
+## Auto update
+
+Tuwing may bagong push sa `main`, gagawa ang GitHub ng bagong APK. Pagbukas ng app, lalabas ang "May bagong update"; pindutin ang **I-update** (sa unang beses, payagan ang "Install unknown apps" para sa SilipTV).
 
 ## Paano gamitin
 

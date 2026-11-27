@@ -1,5 +1,5 @@
 # Gumagawa ng Android app (APK) para sa phone, tablet at Smart TV, at inilalagay sa GitHub Releases.
-# Download: https://github.com/sensengutierrez/SilipTV/releases/latest/download/SilipTV.apk
+# Download: https://github.com/sensengutierrez/SilipTv/releases/latest/download/SilipTV.apk
 name: Build Android app
 on:
   push:

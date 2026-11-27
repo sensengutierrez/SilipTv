@@ -34,7 +34,7 @@ class PlayerActivity : Activity() {
         const val EXTRA_NAMES = "names"
         const val EXTRA_IDS = "ids"
         const val EXTRA_INDEX = "index"
-        const val PLAYER_URL = "https://sensengutierrez.github.io/SilipTV/player.html"
+        const val PLAYER_URL = "https://sensengutierrez.github.io/SilipTv/player.html"
     }
 
     private lateinit var web: WebView

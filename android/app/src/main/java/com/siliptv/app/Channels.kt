@@ -26,7 +26,7 @@ sealed class LiveState {
 
 object Channels {
     /** Listahan na pwedeng i-edit sa GitHub nang hindi gumagawa ng bagong APK. */
-    const val REMOTE_URL = "https://raw.githubusercontent.com/sensengutierrez/SilipTV/main/channels/channels.json"
+    const val REMOTE_URL = "https://raw.githubusercontent.com/sensengutierrez/SilipTv/main/channels/channels.json"
     private const val PREFS = "silip"
     private const val KEY_CACHE = "channels_json"
 

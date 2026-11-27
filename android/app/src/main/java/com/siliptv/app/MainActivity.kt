@@ -70,6 +70,9 @@ private fun Home() {
     var channels by remember { mutableStateOf(Channels.cached(ctx)) }
     val states = remember { mutableStateMapOf<String, LiveState>() }
     var checking by remember { mutableStateOf(false) }
+    var update by remember { mutableStateOf<Updater.Release?>(null) }
+    var dlProgress by remember { mutableStateOf(-1f) }   // -1 = hindi nagda-download
+    var dlError by remember { mutableStateOf<String?>(null) }
 
     suspend fun checkAll(list: List<Channel>) {
         checking = true
@@ -80,6 +83,7 @@ private fun Home() {
         checking = false
     }
 
+    LaunchedEffect(Unit) { update = Updater.check() }
     LaunchedEffect(Unit) {
         Channels.refresh(ctx)?.let { channels = it }
         checkAll(channels)
@@ -114,6 +118,40 @@ private fun Home() {
                 if (!checking) scope.launch {
                     Channels.refresh(ctx)?.let { channels = it }
                     checkAll(channels)
+                }
+            }
+        }
+        update?.let { u ->
+            Spacer(Modifier.height(12.dp))
+            Row(
+                Modifier.fillMaxWidth().background(Card, RoundedCornerShape(12.dp)).padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    when {
+                        dlError != null -> dlError!!
+                        dlProgress >= 0f -> "Dina-download ang update… ${(dlProgress * 100).toInt()}%"
+                        else -> "May bagong update ng SilipTV (bersyon ${u.number})"
+                    },
+                    color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f)
+                )
+                if (dlProgress < 0f) Pill("I-update") {
+                    if (!Updater.canInstall(ctx)) {
+                        dlError = "Payagan ang \"Install unknown apps\" para sa SilipTV, tapos pindutin ulit ang I-update."
+                        Updater.openInstallPermission(ctx)
+                        return@Pill
+                    }
+                    dlError = null
+                    dlProgress = 0f
+                    scope.launch {
+                        try {
+                            val f = Updater.download(ctx, u) { dlProgress = it }
+                            Updater.install(ctx, f)
+                        } catch (e: Exception) {
+                            dlError = e.message ?: "Hindi na-download ang update."
+                        }
+                        dlProgress = -1f
+                    }
                 }
             }
         }
