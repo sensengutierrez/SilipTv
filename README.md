@@ -19,6 +19,10 @@ Tuwing may bagong push sa `main`, gagawa ang GitHub ng bagong APK. Pagbukas ng a
 - Habang nanonood: **Taas/Baba** sa remote (o swipe sa phone) = palit channel, **OK** = pangalan ng channel, **Back** = balik sa listahan.
 - Kapag ayaw i-play ng channel sa loob ng app, kusang bubuksan sa YouTube app.
 
+## Anime
+
+Sa tab na 🎌 Anime, makikita ang pinakabagong libreng episodes mula sa official anime channels sa YouTube (Muse Asia, Ani-One Asia). May episode na baka naka-geo-block sa bansa mo.
+
 ## Magdagdag o magbawas ng channel
 
 I-edit ang [`channels/channels.json`](channels/channels.json) dito sa GitHub. Ang `handle` ay ang `@pangalan` sa `youtube.com/@pangalan`. Makukuha ng app ang bagong listahan sa susunod na refresh, hindi na kailangan ng bagong APK.

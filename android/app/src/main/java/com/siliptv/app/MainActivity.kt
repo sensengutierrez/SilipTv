@@ -24,6 +24,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import android.content.ActivityNotFoundException
+import android.net.Uri
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -69,6 +73,10 @@ private fun Home() {
     var update by remember { mutableStateOf<Updater.Release?>(null) }
     var dlProgress by remember { mutableStateOf(-1f) }   // -1 = hindi nagda-download
     var dlError by remember { mutableStateOf<String?>(null) }
+    var tab by remember { mutableStateOf(0) }   // 0 = Live TV, 1 = Anime
+    var animeSources by remember { mutableStateOf(Anime.cached(ctx)) }
+    val episodes = remember { mutableStateMapOf<String, List<Episode>?>() }   // null = hindi ma-load
+    var noEmbed by remember { mutableStateOf(PlayerActivity.noEmbed(ctx)) }
 
     suspend fun checkAll(list: List<Channel>) {
         checking = true
@@ -81,8 +89,24 @@ private fun Home() {
 
     LaunchedEffect(Unit) { update = Updater.check() }
     LaunchedEffect(Unit) {
-        Channels.refresh(ctx)?.let { channels = it }
+        Channels.refresh(ctx)?.let { channels = it; animeSources = Anime.cached(ctx) }
         checkAll(channels)
+    }
+    LaunchedEffect(tab, animeSources) {
+        if (tab == 1) coroutineScope {
+            animeSources.filter { it.handle !in episodes }.map { src ->
+                async { episodes[src.handle] = Anime.latest(ctx, src) }
+            }.awaitAll()
+        }
+    }
+    // pagbalik mula sa player, basahin ulit kung may channel na bawal i-embed
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        val owner = ctx as ComponentActivity
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) noEmbed = PlayerActivity.noEmbed(ctx)
+        }
+        owner.lifecycle.addObserver(obs)
+        onDispose { owner.lifecycle.removeObserver(obs) }
     }
 
     // numero ng channel = pwesto sa channels.json (hindi nagbabago kahit mag-sort)
@@ -90,8 +114,16 @@ private fun Home() {
     // live muna sa unahan
     val sorted = channels.sortedBy { if (states[it.handle] is LiveState.Live) 0 else 1 }
 
+    fun openYouTube(videoId: String) {
+        try { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId"))) }
+        catch (e: ActivityNotFoundException) { android.widget.Toast.makeText(ctx, "Walang YouTube app sa device na ito.", android.widget.Toast.LENGTH_LONG).show() }
+    }
+
     fun open(ch: Channel) {
-        val live = sorted.filter { states[it.handle] is LiveState.Live }
+        val st = states[ch.handle]
+        // channel na ayaw magpa-play sa ibang app (error 150): diretso sa YouTube app
+        if (st is LiveState.Live && ch.handle in noEmbed) { openYouTube(st.videoId); return }
+        val live = sorted.filter { states[it.handle] is LiveState.Live && it.handle !in noEmbed }
         val idx = live.indexOf(ch)
         if (idx < 0) return
         ctx.startActivity(
@@ -99,6 +131,7 @@ private fun Home() {
                 .putExtra(PlayerActivity.EXTRA_NAMES, live.map { it.name }.toTypedArray())
                 .putExtra(PlayerActivity.EXTRA_NUMBERS, live.map { number(it) }.toIntArray())
                 .putExtra(PlayerActivity.EXTRA_IDS, live.map { (states[it.handle] as LiveState.Live).videoId }.toTypedArray())
+                .putExtra(PlayerActivity.EXTRA_HANDLES, live.map { it.handle }.toTypedArray())
                 .putExtra(PlayerActivity.EXTRA_INDEX, idx)
         )
     }
@@ -125,6 +158,8 @@ private fun Home() {
                         color = t.muted, fontSize = 13.sp, fontFamily = t.font,
                         modifier = Modifier.weight(1f), maxLines = 2
                     )
+                    Pill(t, if (tab == 0) "📺 Live TV" else "🎌 Anime") { tab = 1 - tab }
+                    Spacer(Modifier.width(8.dp))
                     Pill(t, "🎨 ${t.name}") { t = Themes.next(t); Themes.save(ctx, t) }
                     Spacer(Modifier.width(8.dp))
                     Pill(t, if (checking) "Chine-check…" else "↻ Refresh") {
@@ -169,7 +204,17 @@ private fun Home() {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-                LazyVerticalGrid(
+                if (tab == 1) AnimeList(t, animeSources, episodes) { src, i ->
+                    val eps = episodes[src.handle] ?: return@AnimeList
+                    ctx.startActivity(
+                        Intent(ctx, PlayerActivity::class.java)
+                            .putExtra(PlayerActivity.EXTRA_NAMES, eps.map { it.title }.toTypedArray())
+                            .putExtra(PlayerActivity.EXTRA_NUMBERS, IntArray(eps.size) { it + 1 })
+                            .putExtra(PlayerActivity.EXTRA_IDS, eps.map { it.videoId }.toTypedArray())
+                            .putExtra(PlayerActivity.EXTRA_INDEX, i)
+                            .putExtra(PlayerActivity.EXTRA_VOD, true)
+                    )
+                } else LazyVerticalGrid(
                     columns = GridCells.Adaptive(230.dp),
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -179,7 +224,7 @@ private fun Home() {
                     items(sorted, key = { it.handle }) { ch ->
                         val first = ch == sorted.firstOrNull()
                         ChannelCard(
-                            t, ch, number(ch), states[ch.handle] ?: LiveState.Checking,
+                            t, ch, number(ch), states[ch.handle] ?: LiveState.Checking, ch.handle in noEmbed,
                             modifier = if (first) Modifier.focusRequester(firstFocus) else Modifier
                         ) { open(ch) }
                     }
@@ -204,7 +249,7 @@ private fun Pill(t: SilipTheme, text: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ChannelCard(t: SilipTheme, ch: Channel, number: Int, state: LiveState, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun ChannelCard(t: SilipTheme, ch: Channel, number: Int, state: LiveState, ytOnly: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val src = remember { MutableInteractionSource() }
     val focused by src.collectIsFocusedAsState()
     val shape = RoundedCornerShape(if (t.retro) 6.dp else 14.dp)
@@ -243,6 +288,12 @@ private fun ChannelCard(t: SilipTheme, ch: Channel, number: Int, state: LiveStat
                     Box(Modifier.background(t.live, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                         Text("● LIVE", color = t.bg, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = t.font)
                     }
+                    if (ytOnly) {
+                        Spacer(Modifier.width(6.dp))
+                        Box(Modifier.border(1.dp, t.muted, RoundedCornerShape(4.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
+                            Text("YouTube app", color = t.muted, fontSize = 10.sp, fontFamily = t.font)
+                        }
+                    }
                     Spacer(Modifier.width(8.dp))
                     Text(state.title, color = t.text, fontSize = 13.sp, fontFamily = t.font, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
@@ -256,3 +307,56 @@ private fun ChannelCard(t: SilipTheme, ch: Channel, number: Int, state: LiveStat
 
 private fun initials(name: String): String =
     name.split(' ', '-').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }
+
+@Composable
+private fun AnimeList(
+    t: SilipTheme,
+    sources: List<AnimeSource>,
+    episodes: Map<String, List<Episode>?>,
+    onPlay: (AnimeSource, Int) -> Unit,
+) {
+    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(18.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
+        item {
+            Text(
+                "Libreng anime mula sa official channels (pinakabagong upload). May episode na baka hindi available sa bansa mo.",
+                color = t.muted, fontSize = 13.sp, fontFamily = t.font
+            )
+        }
+        sources.forEach { src ->
+            item(key = src.handle) {
+                Column {
+                    Text(src.name, color = t.accent, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = t.font)
+                    Spacer(Modifier.height(8.dp))
+                    val eps = episodes[src.handle]
+                    when {
+                        !episodes.containsKey(src.handle) -> Text("Nilo-load…", color = t.muted, fontSize = 13.sp, fontFamily = t.font)
+                        eps == null -> Text("Hindi ma-load (internet?)", color = t.muted, fontSize = 13.sp, fontFamily = t.font)
+                        eps.isEmpty() -> Text("Walang video", color = t.muted, fontSize = 13.sp, fontFamily = t.font)
+                        else -> LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(eps.size) { i -> EpisodeCard(t, eps[i]) { onPlay(src, i) } }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EpisodeCard(t: SilipTheme, e: Episode, onClick: () -> Unit) {
+    val src = remember { MutableInteractionSource() }
+    val focused by src.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(if (t.retro) 6.dp else 12.dp)
+    Column(
+        Modifier
+            .width(220.dp)
+            .background(t.card, shape)
+            .border(3.dp, if (focused) t.accent else Color.Transparent, shape)
+            .clickable(interactionSource = src, indication = null, onClick = onClick)
+            .padding(12.dp)
+    ) {
+        Text(e.title, color = t.text, fontSize = 14.sp, fontFamily = t.font, maxLines = 3, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(6.dp))
+        Text(e.published, color = t.muted, fontSize = 12.sp, fontFamily = t.font)
+    }
+}

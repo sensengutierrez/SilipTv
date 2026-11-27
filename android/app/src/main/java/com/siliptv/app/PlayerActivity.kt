@@ -44,6 +44,17 @@ class PlayerActivity : Activity() {
         const val EXTRA_NUMBERS = "numbers"
         const val EXTRA_IDS = "ids"
         const val EXTRA_INDEX = "index"
+        const val EXTRA_HANDLES = "handles"
+        const val EXTRA_VOD = "vod"   // anime/episode, hindi live channel
+
+        /** Mga channel na ayaw magpa-play sa ibang app (YouTube error 101/150): diretso na sa YouTube app. */
+        fun noEmbed(c: Context): Set<String> =
+            c.getSharedPreferences("silip", Context.MODE_PRIVATE).getStringSet("no_embed", emptySet()) ?: emptySet()
+
+        private fun markNoEmbed(c: Context, handle: String) {
+            val p = c.getSharedPreferences("silip", Context.MODE_PRIVATE)
+            p.edit().putStringSet("no_embed", noEmbed(c) + handle).apply()
+        }
         const val PLAYER_URL = "https://sensengutierrez.github.io/SilipTv/player.html"
     }
 
@@ -58,6 +69,8 @@ class PlayerActivity : Activity() {
     private var numbers: IntArray = IntArray(0)
     private var ids: Array<String> = emptyArray()
     private var index = 0
+    private var handles: Array<String> = emptyArray()
+    private var vod = false
     private var errorShown = false   // naka-display ang error: OK = buksan sa YouTube app
     private val hideOsd = Runnable { if (!errorShown) { osd.visibility = View.GONE; info.visibility = View.GONE } }
     private val hideControls = Runnable { controls.visibility = View.GONE }
@@ -72,6 +85,8 @@ class PlayerActivity : Activity() {
         ids = intent.getStringArrayExtra(EXTRA_IDS) ?: emptyArray()
         numbers = intent.getIntArrayExtra(EXTRA_NUMBERS) ?: IntArray(ids.size) { it + 1 }
         index = intent.getIntExtra(EXTRA_INDEX, 0)
+        handles = intent.getStringArrayExtra(EXTRA_HANDLES) ?: emptyArray()
+        vod = intent.getBooleanExtra(EXTRA_VOD, false)
         if (ids.isEmpty()) { finish(); return }
 
         val accent = theme.accent.toArgb()
@@ -160,13 +175,15 @@ class PlayerActivity : Activity() {
     }
 
     private fun showOsd() {
-        osd.text = "CH %02d".format(numbers.getOrElse(index) { index + 1 })
-        info.text = if (ids.size > 1) "${names[index]}   ▲▼ palit channel" else names[index]
+        osd.text = label()
+        info.text = if (ids.size > 1) "${names[index]}   ▲▼ palit ${if (vod) "episode" else "channel"}" else names[index]
         osd.visibility = View.VISIBLE
         info.visibility = View.VISIBLE
         main.removeCallbacks(hideOsd)
         main.postDelayed(hideOsd, 4000)
     }
+
+    private fun label() = (if (vod) "EP %d" else "CH %02d").format(numbers.getOrElse(index) { index + 1 })
 
     private fun showControls() {
         controls.visibility = View.VISIBLE
@@ -196,10 +213,14 @@ class PlayerActivity : Activity() {
         snow.start()   // "walang signal" na itsura
         main.removeCallbacks(hideSnow)
         val why = when (code) {
-            "101", "150" -> "Hindi pinapayagan ng channel na i-play ang live na ito sa ibang app."
+            "101", "150" -> {
+                handles.getOrNull(index)?.let { markNoEmbed(this, it) }   // sa susunod, diretso sa YouTube app
+                "Hindi pinapayagan ng channel na i-play ito sa ibang app."
+            }
+            "100" -> "Wala na o private na ang video."
             else -> "Ayaw i-load ng YouTube player dito."
         }
-        osd.text = "CH %02d".format(numbers.getOrElse(index) { index + 1 })
+        osd.text = label()
         osd.visibility = View.VISIBLE
         info.text = "${names[index]}\nError $code: $why\nOK = buksan sa YouTube app  ·  ▲▼ ibang channel  ·  Back = listahan"
         info.visibility = View.VISIBLE
