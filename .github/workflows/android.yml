@@ -1,0 +1,40 @@
+# Gumagawa ng Android app (APK) para sa phone, tablet at Smart TV, at inilalagay sa GitHub Releases.
+# Download: https://github.com/sensengutierrez/SilipTV/releases/latest/download/SilipTV.apk
+name: Build Android app
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', 'channels/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Build APK
+        run: gradle -p android :app:assembleRelease --no-daemon
+      - name: Ihanda ang file
+        run: cp android/app/build/outputs/apk/release/app-release.apk SilipTV.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SilipTV-apk
+          path: SilipTV.apk
+      - name: Ilagay sa Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-v${{ github.run_number }}
+          name: SilipTV app ${{ github.run_number }}
+          body: |
+            SilipTV para sa phone, tablet at Smart TV (Android TV / Google TV).
+            I-download ang SilipTV.apk at buksan para i-install.
+          files: SilipTV.apk
+          make_latest: true

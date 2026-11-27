@@ -1,0 +1,13 @@
+{
+  "_paano": "Listahan ng official YouTube channels ng mga network. I-edit ito sa GitHub para magdagdag o magbawas ng channel; makukuha ng app ang bago sa susunod na refresh. Ang handle ay ang @pangalan sa youtube.com/@pangalan.",
+  "channels": [
+    { "name": "Kapamilya Online Live", "handle": "@ABSCBNEntertainment", "group": "ABS-CBN", "color": "#1E88E5" },
+    { "name": "ABS-CBN News", "handle": "@ABSCBNNews", "group": "ABS-CBN", "color": "#1565C0" },
+    { "name": "GMA Integrated News", "handle": "@gmanews", "group": "GMA", "color": "#E65100" },
+    { "name": "GMA Public Affairs", "handle": "@gmapublicaffairs", "group": "GMA", "color": "#EF6C00" },
+    { "name": "News5", "handle": "@News5Everywhere", "group": "TV5", "color": "#C62828" },
+    { "name": "PTV", "handle": "@PTVPhilippines", "group": "Government", "color": "#2E7D32" },
+    { "name": "UNTV", "handle": "@UNTVNewsandRescue", "group": "UNTV", "color": "#6A1B9A" },
+    { "name": "DZRH News", "handle": "@DZRHNewsTV", "group": "Radio TV", "color": "#00838F" }
+  ]
+}

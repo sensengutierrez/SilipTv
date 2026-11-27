@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!-- YouTube player para sa SilipTV Android app.
+     Nasa sariling site ito para may tamang origin ang official YouTube player
+     (kung wala, "This video is unavailable" / error 152).
+     Bubuksan ng app ang player.html?v=VIDEO_ID; ang mga error ay ipinapasa sa SilipApp.event(). -->
+<html lang="fil" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SilipTV player</title>
+<style>html, body { margin: 0; height: 100%; background: #000; overflow: hidden; } #p { width: 100%; height: 100%; }</style>
+</head>
+<body>
+<div id="p"></div>
+<script>
+var player = null, apiOk = false, kick = null;
+var vid = (new URLSearchParams(location.search).get('v') || '').replace(/[^A-Za-z0-9_-]/g, '');
+function send(e, d) { try { SilipApp.event(e, String(d == null ? '' : d)); } catch (x) {} }
+setTimeout(function () { if (!apiOk) send('error', 'noapi'); }, 12000);
+var tag = document.createElement('script');
+tag.onerror = function () { send('error', 'noapi'); };
+tag.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(tag);
+function onYouTubeIframeAPIReady() {
+  apiOk = true;
+  player = new YT.Player('p', {
+    width: '100%', height: '100%', videoId: vid,
+    playerVars: { origin: location.origin, widget_referrer: location.href, autoplay: 1, controls: 0, rel: 0, playsinline: 1, iv_load_policy: 3, fs: 0, disablekb: 1 },
+    events: {
+      onReady: function () {
+        send('ready');
+        player.playVideo();
+        // kung naharang ang autoplay, i-mute muna para payagan, tapos i-unmute pag tumutugtog na
+        kick = setTimeout(function () {
+          if (player.getPlayerState() !== 1) { player.mute(); player.playVideo(); }
+        }, 3000);
+      },
+      onStateChange: function (e) {
+        send('state', e.data);
+        if (e.data === 1) { clearTimeout(kick); if (player.isMuted()) { player.unMute(); player.setVolume(100); } }
+      },
+      onError: function (e) { send('error', e.data); }
+    }
+  });
+}
+function toggle() {
+  if (!player) return;
+  if (player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
+}
+</script>
+</body>
+</html>
