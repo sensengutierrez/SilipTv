@@ -1,4 +1,4 @@
-package com.siliptv.app
+package com.padalako.app
 
 import android.content.Context
 import android.content.Intent
@@ -8,10 +8,12 @@ import android.provider.Settings
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.TimeUnit
 
 /**
  * Auto update: tinitingnan ang pinakabagong release sa GitHub (tag na app-vN).
@@ -21,13 +23,18 @@ import java.io.FileOutputStream
 object Updater {
     const val REPO = "sensengutierrez/SilipTv"
 
+    private val http: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .build()
+
     data class Release(val number: Int, val apkUrl: String)
 
     suspend fun check(): Release? = withContext(Dispatchers.IO) {
         try {
             val r = Request.Builder().url("https://api.github.com/repos/$REPO/releases/latest")
                 .header("Accept", "application/vnd.github+json").build()
-            Channels.http.newCall(r).execute().use { res ->
+            http.newCall(r).execute().use { res ->
                 if (!res.isSuccessful) return@withContext null
                 val j = JSONObject(res.body?.string() ?: return@withContext null)
                 val n = j.optString("tag_name").removePrefix("app-v").toIntOrNull() ?: return@withContext null
@@ -46,7 +53,7 @@ object Updater {
     suspend fun download(c: Context, rel: Release, progress: (Float) -> Unit): File = withContext(Dispatchers.IO) {
         val dir = File(c.getExternalFilesDir(null) ?: c.cacheDir, "updates").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }
-        val f = File(dir, "SilipTV-${rel.number}.apk")
+        val f = File(dir, "PadalaKo-${rel.number}.apk")
         var total = -1L
         var tries = 0
         while (true) {
@@ -54,7 +61,7 @@ object Updater {
             if (total > 0 && have >= total) break
             val req = Request.Builder().url(rel.apkUrl).apply { if (have > 0) header("Range", "bytes=$have-") }.build()
             try {
-                Channels.http.newCall(req).execute().use { res ->
+                http.newCall(req).execute().use { res ->
                     if (!res.isSuccessful) throw RuntimeException("HTTP ${res.code}")
                     val body = res.body ?: throw RuntimeException("Walang laman")
                     val resumed = res.code == 206
@@ -89,7 +96,7 @@ object Updater {
         f
     }
 
-    /** Kailangang payagan ng user ang "Install unknown apps" para sa SilipTV (minsan lang). */
+    /** Kailangang payagan ng user ang "Install unknown apps" para sa app na ito (minsan lang). */
     fun canInstall(c: Context) = Build.VERSION.SDK_INT < Build.VERSION_CODES.O || c.packageManager.canRequestPackageInstalls()
 
     fun openInstallPermission(c: Context) {
