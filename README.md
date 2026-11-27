@@ -1,46 +1,27 @@
-# 📺 SilipTV
+# 💸 PadalaKo
 
-Libreng live TV mula sa **official** YouTube channels ng mga Philippine network, sa isang app para sa phone, tablet at Smart TV (Android TV / Google TV).
+App para sa OFW: i-lista ang bawat **padala**, tingnan kung **saan napupunta** ang pera, mag-**ipon** para sa goal, at magpaalala sa **bayarin sa Pinas**.
 
-Walang pirated streams: ang pinapatugtog lang ay ang mga live na nilalabas mismo ng network sa sarili nilang channel, gamit ang official YouTube player.
+Nasa phone lang ang data (walang account, walang server). May backup at restore sa ⚙️ Settings.
 
 ## I-download
 
-Android (phone, tablet, Smart TV): https://github.com/sensengutierrez/SilipTv/releases/latest/download/SilipTV.apk
+Android: https://github.com/sensengutierrez/SilipTv/releases/latest/download/PadalaKo.apk
 
 ## Auto update
 
-Tuwing may bagong push sa `main`, gagawa ang GitHub ng bagong APK. Pagbukas ng app, lalabas ang "May bagong update"; pindutin ang **I-update** (sa unang beses, payagan ang "Install unknown apps" para sa SilipTV).
+Tuwing may bagong push sa `main`, gagawa ang GitHub ng bagong APK. Pagbukas ng app, lalabas ang "May bagong update"; pindutin ang **I-update** (sa unang beses, payagan ang "Install unknown apps" para sa PadalaKo).
 
-## Paano gamitin
+## Mga tab
 
-- Pagbukas, chine-check ng app kung aling channel ang naka-**LIVE** ngayon. Nasa unahan ang mga live.
-- Piliin ang channel (touch, o OK sa remote ng TV).
-- Habang nanonood: **Taas/Baba** sa remote (o swipe sa phone) = palit channel, **OK** = pangalan ng channel, **Back** = balik sa listahan.
-- Kapag ayaw i-play ng channel sa loob ng app, kusang bubuksan sa YouTube app.
-
-## Anime
-
-Sa tab na 🎌 Anime, makikita ang pinakabagong libreng episodes mula sa official anime channels sa YouTube (Muse Asia, Ani-One Asia). May episode na baka naka-geo-block sa bansa mo.
-
-## Magdagdag o magbawas ng channel
-
-I-edit ang [`channels/channels.json`](channels/channels.json) dito sa GitHub. Ang `handle` ay ang `@pangalan` sa `youtube.com/@pangalan`. Makukuha ng app ang bagong listahan sa susunod na refresh, hindi na kailangan ng bagong APK.
-
-## Limitasyon
-
-- Live lang kapag naka-live mismo ang channel (hal. oras ng balita). Hindi lahat ng shows ay may libreng live.
-- May live na naka-geo-block sa labas ng Pilipinas. Para doon, official subscription (hal. TFC, GMA Pinoy TV) ang legal na paraan.
+- 🏠 **Buod**: kabuuang padala ngayong buwan (piso at pera sa abroad), kumpara sa nakaraang buwan, saan napupunta (kategorya), huling 6 na buwan, susunod na bayarin, at ipon.
+- 💸 **Padala**: listahan ng padala kada buwan. Pindutin ang isa para i-edit o burahin.
+- 🐷 **Ipon**: mga goal (hal. Pambahay) na may progress. **+ Ihulog** para dagdagan.
+- 🧾 **Bayarin**: buwanang bayarin na may araw ng due. Notification 3 araw bago ang due, at **✓ Bayad na** kapag nabayaran.
 
 ## Folders
 
 ```
 ├── android/            Android app (Kotlin, Compose); APK sa GitHub Releases
-├── channels/           channels.json: listahan ng channels (kasama sa APK at kinukuha rin online)
-├── docs/player.html    YouTube player page (GitHub Pages) na ginagamit ng app
-└── .github/workflows/  android.yml (gumagawa ng APK), pages.yml (nagde-deploy ng docs/)
+└── .github/workflows/  android.yml (gumagawa ng APK)
 ```
-
-## Setup (isang beses lang)
-
-GitHub → Settings → Pages → **Source: GitHub Actions**. Kailangan ito para gumana ang player.

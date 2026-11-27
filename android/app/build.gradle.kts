@@ -7,13 +7,11 @@ plugins {
 val runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
 
 android {
-    // Iisang channel list: channels/channels.json (kasama sa APK at kinukuha rin online)
-    sourceSets["main"].assets.srcDir(file("../../channels"))
-    namespace = "com.siliptv.app"
+    namespace = "com.padalako.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.siliptv.app"
+        applicationId = "com.padalako.app"
         minSdk = 23
         targetSdk = 34
         versionCode = runNumber
@@ -23,7 +21,7 @@ android {
     // Pansariling susi para iisa ang pirma ng bawat build (para ma-update ang app nang hindi binubura).
     signingConfigs {
         create("personal") {
-            storeFile = file("siliptv-personal.keystore")
+            storeFile = file("personal.keystore")
             storePassword = "silip-tv"
             keyAlias = "silip"
             keyPassword = "silip-tv"
