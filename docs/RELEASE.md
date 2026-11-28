@@ -29,9 +29,21 @@ Run numbers are shared with branch builds, so release tags skip numbers (for exa
 
 ## Signing
 
-The APK is signed with `android/app/personal.keystore` (see `android/app/build.gradle.kts`).
-Installed apps only accept updates signed with the **same key**. Changing the key means every user
-must back up, uninstall and reinstall. See the signing finding in [SECURITY.md](SECURITY.md).
+The release key is **not** in the repo. It lives in GitHub repo Settings → Secrets and variables → Actions:
+
+| Secret | Value |
+|---|---|
+| `POS_KEYSTORE_B64` | The PKCS12 keystore file, base64 encoded (alias `pos`) |
+| `POS_KEYSTORE_PASSWORD` | The keystore password (also the key password) |
+
+`android.yml` decodes the keystore to `$RUNNER_TEMP`, passes its path and password to Gradle as env vars
+(`POS_KEYSTORE`, `POS_KEYSTORE_PASSWORD`, optional `POS_KEY_ALIAS`, `POS_KEY_PASSWORD`) and deletes it after the build.
+On `main` the build **fails** if the secrets are missing, so a wrongly signed release is never published.
+Branch and local builds without the secrets are signed with the debug key and are for testing only.
+
+Installed apps only accept updates signed with the **same key**. Keep a private copy of the keystore and its
+password outside GitHub (for example in a password manager). If it is lost, every user must back up, uninstall
+and reinstall. The key was rotated on 2026-11-28; copies installed before that need one reinstall.
 
 ## Cloud (Supabase) deploys
 
