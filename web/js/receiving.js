@@ -62,7 +62,7 @@
     const { S, dayKey } = K();
     open({
       id: '', no: 0, status: 'draft', time: Date.now(), date: dayKey(Date.now()),
-      supplier: '', invoiceNo: '', receivedBy: S.store.cashier || '', notes: '', lines: [], total: 0,
+      supplier: '', invoiceNo: '', receivedBy: K().cashierName(), notes: '', lines: [], total: 0,
     });
   }
 
@@ -381,6 +381,7 @@
         } else {
           const v = $('#rVoid', m);
           if (v) v.onclick = async () => {
+            if (!(await K().requireAdmin())) return;
             if (!(await K().confirmBox(t('I-void ang RCV #{n}?', { n: rec.no }), t('Babawasan ulit ang stock ng mga paninda dito. Hindi ibabalik ang lumang puhunan at presyo.'), t('I-void'), true))) return;
             await DB.voidReceiving(rec.id);
             await K().reloadProducts();

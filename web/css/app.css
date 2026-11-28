@@ -345,6 +345,46 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .dash-grid { margin-top: 12px; }
 .link-row { width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; text-align: start; font: inherit; }
 
+/* Lock screen at PIN */
+.lock { position: fixed; inset: 0; z-index: 100; background: var(--accent); display: grid; place-items: center; padding: 16px; overflow: auto; }
+.lock-card { background: var(--card); border-radius: 20px; padding: 20px; width: min(420px, 100%); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.lock-store { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.lock-store .logo { background: var(--accent-soft); color: var(--accent); }
+.lock-store .store-name { font-weight: 800; font-size: 20px; }
+.lock-store .muted { margin: 0; }
+.lock-users { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.lock-user { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border: 1px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer; font-weight: 600; font-size: 14px; }
+.lock-user.on { border-color: var(--accent); background: var(--accent-soft); }
+.lock-user .badge { font-size: 10px; padding: 1px 6px; }
+.lock-pin { margin-top: 14px; }
+.pin-dots { display: flex; justify-content: center; gap: 10px; min-height: 28px; align-items: center; margin-bottom: 10px; }
+.pin-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--ink); }
+.pin-dots .muted { margin: 0; }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pin-pad button { min-height: 54px; font-size: 22px; font-weight: 700; border: 1px solid var(--line); border-radius: 14px; background: #fafbfc; cursor: pointer; }
+.pin-pad button:active { background: var(--accent-soft); }
+.pin-pad .ok { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-size: 18px; }
+.pin-pad .del { font-size: 20px; }
+.shake { animation: shake .35s; }
+@keyframes shake { 0%,100% { transform: none; } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+/* Kaha / shift */
+.row-lr { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.row-lr.muted-row { color: var(--muted); font-size: 14px; }
+.bad-t { color: var(--bad); }
+.ok-t { color: var(--ok); }
+.seg.subnav { grid-template-columns: repeat(4, 1fr); }
+.seg.subnav button { padding: 9px 4px; }
+.seg.wrap-seg { display: flex; flex-wrap: wrap; }
+
+/* Settings: paraan ng bayad */
+.method-edit { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-x { border: 0; background: none; color: inherit; font-size: 16px; line-height: 1; padding: 0 0 0 4px; cursor: pointer; }
+
+/* Tala sa order */
+.note-btn { width: 100%; text-align: start; border: 1px dashed var(--line); background: none; border-radius: 10px; padding: 8px 10px; margin-top: 8px; color: var(--muted); font-size: 13px; cursor: pointer; }
+.note-btn.on { border-style: solid; border-color: #f59e0b; background: #fffbeb; color: var(--ink); }
+
 @media (min-width: 720px) {
   .modal-wrap { align-items: center; }
   .modal { border-radius: 18px; }

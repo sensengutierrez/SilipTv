@@ -11,8 +11,14 @@
   const q = (n) => String(Math.round(num(n) * 1000) / 1000);
   const pad = (x) => String(x).padStart(2, '0');
   function fmt(ts) { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  /** Ilang decimal ang pera: 3 sa BHD, KWD, OMR (fils/baisa), 2 sa iba. */
+  function decimalsOf(store) {
+    if (store && store.decimals != null && store.decimals !== '') return Number(store.decimals);
+    return /^(BD|BHD|KWD|OMR|JOD|د\.ب)/.test(String((store && store.currency) || '').trim()) ? 3 : 2;
+  }
   function moneyFn(store) {
-    return (n) => (store.currency || '₱') + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const d = decimalsOf(store);
+    return (n) => (store.currency || '₱') + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   }
 
   function saleDoc(store, sale, opts) {
@@ -28,6 +34,7 @@
     d.push({ t: 'text', s: fmt(sale.time) });
     if (sale.cashier) d.push({ t: 'text', s: t('Cashier') + ': ' + sale.cashier });
     if (sale.customerName) d.push({ t: 'text', s: t('Suki') + ': ' + sale.customerName });
+    if (sale.note) d.push({ t: 'text', s: t('Tala') + ': ' + sale.note });
     if (sale.voided) d.push({ t: 'text', s: '*** VOIDED ***', align: 'c', b: true });
     d.push({ t: 'rule' });
     sale.items.forEach((it) => {
@@ -43,7 +50,7 @@
       d.push({ t: 'lr', l: t('Utang'), r: m(sale.credit), b: true });
       if (sale.balanceAfter != null) d.push({ t: 'lr', l: t('Kabuuang balanse'), r: m(sale.balanceAfter) });
     } else {
-      d.push({ t: 'lr', l: METHOD_LABEL(method), r: m(sale.cash) });
+      d.push({ t: 'lr', l: sale.methodLabel || METHOD_LABEL(method), r: m(sale.cash) });
       if (num(sale.change)) d.push({ t: 'lr', l: t('Sukli'), r: m(sale.change) });
     }
     d.push({ t: 'rule' });
@@ -52,8 +59,13 @@
     return d;
   }
 
+  let customMethods = [];
+  function setMethods(list) { customMethods = list || []; }
   function METHOD_LABEL(k) {
-    return { cash: t('Cash'), gcash: t('GCash / e-wallet'), card: t('Card'), utang: t('Utang') }[k] || k;
+    const builtin = { cash: t('Cash'), gcash: 'GCash', card: t('Card'), utang: t('Utang') }[k];
+    if (builtin) return builtin;
+    const c = customMethods.find((x) => x.id === k);
+    return c ? c.label : k;
   }
 
   /** Resibo ng bayad sa utang. */
@@ -69,7 +81,7 @@
     d.push({ t: 'text', s: t('Suki') + ': ' + cust.name });
     d.push({ t: 'rule' });
     d.push({ t: 'lr', l: t('Halagang ibinayad'), r: m(pay.amount), b: true, big: true });
-    if (pay.method && pay.method !== 'cash') d.push({ t: 'lr', l: t('Paraan'), r: METHOD_LABEL(pay.method) });
+    if (pay.method && pay.method !== 'cash') d.push({ t: 'lr', l: t('Paraan'), r: pay.methodLabel || METHOD_LABEL(pay.method) });
     d.push({ t: 'lr', l: t('Natitirang balanse'), r: m(balance) });
     if (pay.note) d.push({ t: 'text', s: pay.note });
     d.push({ t: 'rule' });
@@ -274,5 +286,5 @@
     return needsImage ? toRasterBytes(doc, opts.paper) : toEscPos(doc, opts);
   }
 
-  window.Receipt = { saleDoc, slipDoc, testDoc, paymentDoc, toHtml, toText, bytes, toCanvas, METHOD_LABEL };
+  window.Receipt = { saleDoc, slipDoc, testDoc, paymentDoc, toHtml, toText, bytes, toCanvas, METHOD_LABEL, setMethods, decimalsOf };
 })();
