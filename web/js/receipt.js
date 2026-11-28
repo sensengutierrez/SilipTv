@@ -27,6 +27,7 @@
     d.push({ t: 'text', s: t('Resibo #{n}', { n: sale.no }) });
     d.push({ t: 'text', s: fmt(sale.time) });
     if (sale.cashier) d.push({ t: 'text', s: t('Cashier') + ': ' + sale.cashier });
+    if (sale.customerName) d.push({ t: 'text', s: t('Suki') + ': ' + sale.customerName });
     if (sale.voided) d.push({ t: 'text', s: '*** VOIDED ***', align: 'c', b: true });
     d.push({ t: 'rule' });
     sale.items.forEach((it) => {
@@ -36,12 +37,65 @@
     d.push({ t: 'rule' });
     if (sale.discount) { d.push({ t: 'lr', l: t('Subtotal'), r: m(sale.subtotal) }); d.push({ t: 'lr', l: t('Discount'), r: '-' + m(sale.discount) }); }
     d.push({ t: 'lr', l: t('TOTAL'), r: m(sale.total), b: true, big: true });
-    d.push({ t: 'lr', l: t('Cash'), r: m(sale.cash) });
-    d.push({ t: 'lr', l: t('Sukli'), r: m(sale.change) });
+    const method = sale.method || 'cash';
+    if (method === 'utang') {
+      if (num(sale.cash) > 0) d.push({ t: 'lr', l: t('Paunang bayad'), r: m(sale.cash) });
+      d.push({ t: 'lr', l: t('Utang'), r: m(sale.credit), b: true });
+      if (sale.balanceAfter != null) d.push({ t: 'lr', l: t('Kabuuang balanse'), r: m(sale.balanceAfter) });
+    } else {
+      d.push({ t: 'lr', l: METHOD_LABEL(method), r: m(sale.cash) });
+      if (num(sale.change)) d.push({ t: 'lr', l: t('Sukli'), r: m(sale.change) });
+    }
     d.push({ t: 'rule' });
     if (store.footer) d.push({ t: 'text', s: store.footer, align: 'c' });
     d.push({ t: 'sm', s: t('Hindi ito opisyal na resibo'), align: 'c' });
     return d;
+  }
+
+  function METHOD_LABEL(k) {
+    return { cash: t('Cash'), gcash: t('GCash / e-wallet'), card: t('Card'), utang: t('Utang') }[k] || k;
+  }
+
+  /** Resibo ng bayad sa utang. */
+  function paymentDoc(store, pay, cust, balance) {
+    const m = moneyFn(store);
+    const d = [];
+    d.push({ t: 'text', s: store.name || t('Tindahan'), align: 'c', b: true, big: true });
+    if (store.address) d.push({ t: 'text', s: store.address, align: 'c' });
+    if (store.phone) d.push({ t: 'text', s: store.phone, align: 'c' });
+    d.push({ t: 'rule' });
+    d.push({ t: 'text', s: t('BAYAD SA UTANG'), align: 'c', b: true });
+    d.push({ t: 'text', s: fmt(pay.time) });
+    d.push({ t: 'text', s: t('Suki') + ': ' + cust.name });
+    d.push({ t: 'rule' });
+    d.push({ t: 'lr', l: t('Halagang ibinayad'), r: m(pay.amount), b: true, big: true });
+    if (pay.method && pay.method !== 'cash') d.push({ t: 'lr', l: t('Paraan'), r: METHOD_LABEL(pay.method) });
+    d.push({ t: 'lr', l: t('Natitirang balanse'), r: m(balance) });
+    if (pay.note) d.push({ t: 'text', s: pay.note });
+    d.push({ t: 'rule' });
+    d.push({ t: 'text', s: t('Salamat po!'), align: 'c' });
+    return d;
+  }
+
+  /** Doc -> plain text (para sa WhatsApp, SMS, email). */
+  function toText(doc, width) {
+    const W = width || 32;
+    const lines = [];
+    const len = (s) => Array.from(s).length;
+    doc.forEach((x) => {
+      if (x.t === 'logo' || x.t === 'feed') return;
+      if (x.t === 'rule') { lines.push('-'.repeat(W)); return; }
+      if (x.t === 'lr') {
+        const l = String(x.l), r = String(x.r);
+        if (len(l) + len(r) + 1 <= W) lines.push(l + ' '.repeat(W - len(l) - len(r)) + r);
+        else { lines.push(l); lines.push(' '.repeat(Math.max(0, W - len(r))) + r); }
+        return;
+      }
+      const s = String(x.s || '');
+      if (x.align === 'c' && len(s) < W) lines.push(' '.repeat(Math.floor((W - len(s)) / 2)) + s);
+      else lines.push(x.t === 'sm' ? '  ' + s : s);
+    });
+    return lines.join('\n');
   }
 
   function slipDoc(store, rec) {
@@ -220,5 +274,5 @@
     return needsImage ? toRasterBytes(doc, opts.paper) : toEscPos(doc, opts);
   }
 
-  window.Receipt = { saleDoc, slipDoc, testDoc, toHtml, bytes, toCanvas };
+  window.Receipt = { saleDoc, slipDoc, testDoc, paymentDoc, toHtml, toText, bytes, toCanvas, METHOD_LABEL };
 })();
