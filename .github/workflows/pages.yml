@@ -1,0 +1,35 @@
+# I-deploy ang web/ (POS website) sa GitHub Pages tuwing may push sa main.
+# Website: https://sensengutierrez.github.io/SilipTv/
+name: Deploy POS website
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bersyon (para lumabas ang "May bagong bersyon" sa mga bukas na browser)
+        run: |
+          V="w${{ github.run_number }}"
+          echo "window.POS_VERSION = 'web $V';" > web/js/version.js
+          sed -i "s/const VERSION = 'dev';/const VERSION = '$V';/" web/sw.js
+          touch web/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

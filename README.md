@@ -1,27 +1,34 @@
-# 💸 PadalaKo
+# 🧾 POS para sa tindahan
 
-App para sa OFW: i-lista ang bawat **padala**, tingnan kung **saan napupunta** ang pera, mag-**ipon** para sa goal, at magpaalala sa **bayarin sa Pinas**.
+Simpleng POS (point of sale) para sa sari-sari store at maliliit na tindahan. **Walang ads, walang account, walang nakatakdang brand**: ang may-ari ang maglalagay ng pangalan, logo at kulay ng tindahan nila, at iyon ang lalabas sa app at sa resibo.
 
-Nasa phone lang ang data (walang account, walang server). May backup at restore sa ⚙️ Settings.
+Gumagana sa **Android phone (APK)** at bilang **website** (puwedeng i-install sa phone o computer). Nasa device lang ang data at gumagana kahit walang internet.
 
-## I-download
+## I-download / buksan
 
-Android: https://github.com/sensengutierrez/SilipTv/releases/latest/download/PadalaKo.apk
-
-## Auto update
-
-Tuwing may bagong push sa `main`, gagawa ang GitHub ng bagong APK. Pagbukas ng app, lalabas ang "May bagong update"; pindutin ang **I-update** (sa unang beses, payagan ang "Install unknown apps" para sa PadalaKo).
+- Android: https://github.com/sensengutierrez/SilipTv/releases/latest/download/POS.apk
+- Website: https://sensengutierrez.github.io/SilipTv/ (sa Chrome, "Install app" o "Add to Home screen")
 
 ## Mga tab
 
-- 🏠 **Buod**: kabuuang padala ngayong buwan (piso at pera sa abroad), kumpara sa nakaraang buwan, saan napupunta (kategorya), huling 6 na buwan, susunod na bayarin, at ipon.
-- 💸 **Padala**: listahan ng padala kada buwan. Pindutin ang isa para i-edit o burahin.
-- 🐷 **Ipon**: mga goal (hal. Pambahay) na may progress. **+ Ihulog** para dagdagan.
-- 🧾 **Bayarin**: buwanang bayarin na may araw ng due. Notification 3 araw bago ang due, at **✓ Bayad na** kapag nabayaran.
+- **Cashier**: mag-scan ng barcode (camera, o USB/Bluetooth scanner), maghanap ng paninda, mabilis na pili ng pinakamabenta, cart na may +/− at decimal (hal. 0.5 kilo), discount (halaga o %), bayad at sukli na may mabilis na buttons, **Bayad & Print**.
+- **Paninda**: dagdag/edit ng paninda (pangalan, barcode, presyo, puhunan, unit, kategorya, stock, paalala kapag paubos), "Dagdag stock" kapag may delivery, filter ng paubos at ubos.
+- **Benta**: benta ngayon, kahapon, 7 araw, buwan o kahit anong araw; tubo, pinakamabenta, listahan ng resibo, print ulit, void (ibinabalik ang stock), export sa CSV.
+- **Printer**: Bluetooth thermal printer (58mm/80mm) sa Android app, Bluetooth (BLE) sa Chrome, o ordinaryong print/PDF. May logo sa resibo at test print.
+- **Backup**: i-save ang lahat ng data bilang file at ibalik sa ibang phone; export/import ng paninda sa CSV (Excel/Google Sheets).
+- **⚙ Tindahan**: pangalan, logo, address, contact, cashier, mensahe sa resibo, simbolo ng pera, kulay ng app.
+
+## Auto update
+
+- **APK**: tuwing may push sa `main`, gagawa ang GitHub ng bagong `POS.apk` (release `pos-vN`). Pagbukas ng app, lalabas ang "May bagong update"; pindutin ang **I-update**. Hindi nawawala ang data.
+- **Website**: kusang naa-update; lalabas ang "May bagong bersyon" at **I-reload**.
 
 ## Folders
 
 ```
-├── android/            Android app (Kotlin, Compose); APK sa GitHub Releases
-└── .github/workflows/  android.yml (gumagawa ng APK)
+├── web/                Ang POS mismo (HTML/CSS/JS, offline, IndexedDB)
+├── android/            Android app: WebView na may laman na web/, Bluetooth printer, Google barcode scanner, auto update
+└── .github/workflows/  android.yml (APK sa Releases), pages.yml (website sa GitHub Pages)
 ```
+
+Subukan sa computer: `cd web && python3 -m http.server 8000` tapos buksan ang http://localhost:8000
