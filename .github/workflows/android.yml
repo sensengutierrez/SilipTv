@@ -23,8 +23,28 @@ jobs:
           gradle-version: '8.7'
       - name: Ilagay ang bersyon sa web app
         run: echo "window.POS_VERSION = '1.0.${{ github.run_number }}';" > web/js/version.js
+      - name: Ihanda ang susi ng pirma
+        env:
+          KS_B64: ${{ secrets.POS_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.POS_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ]; then
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              echo "::error::Walang POS_KEYSTORE_B64 o POS_KEYSTORE_PASSWORD sa GitHub Secrets. Hindi maglalabas ng release na mali ang pirma."
+              exit 1
+            fi
+            echo "::warning::Walang signing secrets; debug key ang gagamitin (test build lang)."
+            exit 0
+          fi
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/pos.keystore"
+          echo "POS_KEYSTORE=$RUNNER_TEMP/pos.keystore" >> "$GITHUB_ENV"
       - name: Build APK
+        env:
+          POS_KEYSTORE_PASSWORD: ${{ secrets.POS_KEYSTORE_PASSWORD }}
         run: gradle -p android :app:assembleRelease --no-daemon
+      - name: Burahin ang susi
+        if: always()
+        run: rm -f "$RUNNER_TEMP/pos.keystore"
       - name: Ihanda ang file
         run: cp android/app/build/outputs/apk/release/app-release.apk POS.apk
       - uses: actions/upload-artifact@v4
@@ -40,5 +60,6 @@ jobs:
           body: |
             POS para sa tindahan: cashier, paninda, benta, Bluetooth na resibo, backup.
             I-download ang POS.apk at buksan para i-install.
+            Kung "App not installed" ang lumabas: mag-backup muna, i-uninstall ang luma, i-install ito, at i-restore ang backup (isang beses lang, dahil sa bagong pirma).
           files: POS.apk
           make_latest: true

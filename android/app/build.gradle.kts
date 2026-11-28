@@ -26,21 +26,24 @@ android {
         versionName = "1.0.$runNumber"
     }
 
-    // Pansariling susi para iisa ang pirma ng bawat build (para ma-update ang app nang hindi binubura).
+    // Susi ng pirma: galing sa GitHub Secrets (POS_KEYSTORE, POS_KEYSTORE_PASSWORD, POS_KEY_ALIAS).
+    // Kapag wala (local o fork), debug key ang gamit; hindi ito pang-release.
+    val ksPath = System.getenv("POS_KEYSTORE")
+    val ksPass = System.getenv("POS_KEYSTORE_PASSWORD")
+    val hasKey = !ksPath.isNullOrBlank() && !ksPass.isNullOrBlank() && file(ksPath).exists()
     signingConfigs {
-        create("personal") {
-            storeFile = file("personal.keystore")
-            storePassword = "silip-tv"
-            keyAlias = "silip"
-            keyPassword = "silip-tv"
+        if (hasKey) create("release") {
+            storeFile = file(ksPath!!)
+            storePassword = ksPass
+            keyAlias = System.getenv("POS_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "pos"
+            keyPassword = System.getenv("POS_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: ksPass
         }
     }
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("personal")
+            signingConfig = if (hasKey) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
-        debug { signingConfig = signingConfigs.getByName("personal") }
     }
     sourceSets["main"].assets.srcDir(webAssets)
     buildFeatures { buildConfig = true }
