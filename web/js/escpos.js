@@ -107,58 +107,35 @@
     });
   }
 
-  /** Buong resibo bilang bytes. */
-  async function receipt(store, sale, opts) {
+  /** Doc (galing sa Receipt) -> ESC/POS text bytes. */
+  async function fromDoc(doc, opts) {
     const cols = opts.paper === 80 ? 48 : 32;
     const b = new Builder(cols);
-    const money = (n) => (store.currency || '₱') + Number(n).toFixed(2);
-    b.align('center');
-    if (opts.logo && store.logo) {
-      const img = await rasterize(store.logo, opts.paper === 80 ? 576 : 384);
-      if (img) b.image(img);
+    for (const x of doc) {
+      if (x.t === 'logo') {
+        const img = await rasterize(x.src, opts.paper === 80 ? 576 : 384);
+        if (img) b.align('center').image(img);
+        continue;
+      }
+      if (x.t === 'rule') { b.align('left').rule(); continue; }
+      if (x.t === 'feed') { b.feed(1); continue; }
+      b.align(x.align === 'c' ? 'center' : 'left').bold(!!x.b);
+      if (x.t === 'lr') {
+        if (x.big) b.size(1, 2);
+        b.lr(x.l, x.r);
+      } else if (x.big) {
+        b.size(2, 2);
+        wrap(ascii(x.s), Math.floor(cols / 2)).forEach((l) => b.line(l));
+      } else {
+        b.wrapped((x.t === 'sm' && x.align !== 'c' ? '  ' : '') + x.s);
+      }
+      b.size(1, 1).bold(false);
     }
-    b.bold(true).size(2, 2);
-    wrap(ascii(store.name || 'Tindahan'), Math.floor(cols / 2)).forEach((l) => b.line(l));
-    b.size(1, 1).bold(false);
-    if (store.address) b.wrapped(store.address);
-    if (store.phone) b.line(store.phone);
-    if (store.tin) b.line(store.tin);
-    b.align('left').rule();
-    b.line('Resibo #' + sale.no);
-    b.line(fmtDate(sale.time));
-    if (sale.cashier) b.line('Cashier: ' + sale.cashier);
-    if (sale.voided) { b.align('center').bold(true).line('*** VOIDED ***').bold(false).align('left'); }
-    b.rule();
-    for (const it of sale.items) {
-      b.lr(it.name, money(it.price * it.qty));
-      if (it.qty !== 1) b.line('  ' + trimNum(it.qty) + ' ' + (it.unit || '') + ' x ' + money(it.price));
-    }
-    b.rule();
-    if (sale.discount) { b.lr('Subtotal', money(sale.subtotal)); b.lr('Discount', '-' + money(sale.discount)); }
-    b.bold(true).size(1, 2).lr('TOTAL', money(sale.total)).size(1, 1).bold(false);
-    b.lr('Cash', money(sale.cash));
-    b.lr('Sukli', money(sale.change));
-    b.rule();
-    b.align('center');
-    if (store.footer) b.wrapped(store.footer);
-    b.line('Hindi ito opisyal na resibo').feed(3).cut();
+    b.feed(3).cut();
     return b.bytes();
   }
 
-  async function testPage(store, opts) {
-    const b = new Builder(opts.paper === 80 ? 48 : 32);
-    b.align('center');
-    if (opts.logo && store.logo) {
-      const img = await rasterize(store.logo, opts.paper === 80 ? 576 : 384);
-      if (img) b.image(img);
-    }
-    b.bold(true).size(2, 2).line('TEST PRINT').size(1, 1).bold(false);
-    b.line(store.name || '');
-    b.rule().align('left').lr('Item', 'P99.00').lr('Mahabang pangalan ng produkto para sa test', 'P1,234.00');
-    b.rule().align('center').line('Gumagana ang printer!').feed(3).cut();
-    return b.bytes();
-  }
-
+  function num(v) { const n = Number(v); return isFinite(n) ? n : 0; }
   function trimNum(n) { return String(Math.round(n * 1000) / 1000); }
   function fmtDate(t) {
     const d = new Date(t);
@@ -166,5 +143,5 @@
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
 
-  window.EscPos = { receipt, testPage, ascii };
+  window.EscPos = { fromDoc, ascii };
 })();

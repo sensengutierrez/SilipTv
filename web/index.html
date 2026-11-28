@@ -4,22 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1e40af">
-  <meta name="description" content="Simpleng POS para sa tindahan: cashier, paninda, benta, resibo. Gumagana kahit walang internet.">
+  <meta name="description" content="Simple store POS: cashier, inventory, receiving, sales, receipts. Works offline.">
   <title>POS</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="css/app.css">
+  <script src="js/i18n.js"></script>
+  <script src="js/i18n-dict.js"></script>
+  <script>I18N.apply();</script>
 </head>
 <body>
   <header class="top">
-    <button class="store" id="storeBtn" type="button" aria-label="Ayusin ang tindahan">
+    <button class="store" id="storeBtn" type="button" aria-label="Tindahan">
       <span class="logo" id="storeLogo"></span>
       <span class="store-text">
-        <span class="store-name" id="storeName">Tindahan</span>
-        <span class="store-sub" id="storeSub">Pindutin para ilagay ang pangalan</span>
+        <span class="store-name" id="storeName"></span>
+        <span class="store-sub" id="storeSub"></span>
       </span>
     </button>
+    <button class="icon-btn lang-btn" id="langBtn" type="button" aria-label="Language">TL</button>
     <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings">
       <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm7.43-2.53a7.6 7.6 0 0 0 0-1.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.68-.97l-.36-2.54A.5.5 0 0 0 14.13 3h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.6.24-1.17.57-1.68.97l-2.39-.96a.5.5 0 0 0-.6.22L2.84 9.51a.5.5 0 0 0 .12.64l2.03 1.58a7.6 7.6 0 0 0 0 1.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.08.73 1.68.97l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.6-.24 1.17-.57 1.68-.97l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58Z"/></svg>
     </button>
@@ -28,23 +32,27 @@
   <nav class="tabs" id="tabs">
     <button type="button" data-view="cashier" class="on">
       <svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.4L21 8H6.2"/><circle cx="10" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/></svg>
-      <span>Cashier</span>
+      <span data-t>Cashier</span>
     </button>
     <button type="button" data-view="inventory">
       <svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>
-      <span>Paninda</span>
+      <span data-t>Paninda</span>
+    </button>
+    <button type="button" data-view="receiving">
+      <svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>
+      <span data-t>Receiving</span>
     </button>
     <button type="button" data-view="sales">
       <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-      <span>Benta</span>
+      <span data-t>Benta</span>
     </button>
     <button type="button" data-view="printer">
       <svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H4v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6h-3"/><path d="M7 14h10v7H7z"/></svg>
-      <span>Printer</span>
+      <span data-t>Printer</span>
     </button>
     <button type="button" data-view="backup">
       <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-      <span>Backup</span>
+      <span data-t>Backup</span>
     </button>
   </nav>
 
@@ -56,7 +64,7 @@
           <div class="search-row">
             <button class="btn primary scan-btn" id="scanBtn" type="button">
               <svg viewBox="0 0 24 24"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>
-              Scan
+              <span data-t>Scan</span>
             </button>
             <div class="search">
               <input id="search" type="search" inputmode="search" autocomplete="off" placeholder="Hanapin ang paninda o i-type ang barcode">
@@ -64,7 +72,7 @@
             </div>
           </div>
           <div class="quick" id="quickWrap">
-            <div class="label-row"><span class="label">Mabilis na pili</span></div>
+            <div class="label-row"><span class="label" data-t>Mabilis na pili</span></div>
             <div class="quick-grid" id="quick"></div>
           </div>
         </div>
@@ -72,24 +80,24 @@
         <div class="pane cart-pane">
           <div class="card cart">
             <div class="cart-head">
-              <h2>Cart <span class="count" id="cartCount"></span></h2>
-              <button class="link" id="clearCart" type="button" hidden>Alisin lahat</button>
+              <h2><span data-t>Cart</span> <span class="count" id="cartCount"></span></h2>
+              <button class="link" id="clearCart" type="button" hidden data-t>Alisin lahat</button>
             </div>
             <div id="cartList" class="cart-list"></div>
           </div>
 
           <div class="card pay">
-            <div class="row sub" id="subRow" hidden><span>Subtotal</span><span id="subtotal"></span></div>
-            <div class="row sub" id="discRow" hidden><span>Discount</span><span id="discount"></span></div>
-            <div class="row total"><span>Total</span><span id="total">₱0.00</span></div>
+            <div class="row sub" id="subRow" hidden><span data-t>Subtotal</span><span id="subtotal"></span></div>
+            <div class="row sub" id="discRow" hidden><span data-t>Discount</span><span id="discount"></span></div>
+            <div class="row total"><span data-t>Total</span><span id="total">0.00</span></div>
             <label class="field">
-              <span>Bayad (cash)</span>
+              <span data-t>Bayad (cash)</span>
               <input id="cash" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00">
             </label>
             <div class="chips" id="cashChips"></div>
-            <div class="row change"><span>Sukli</span><span id="change">—</span></div>
+            <div class="row change"><span data-t>Sukli</span><span id="change">—</span></div>
             <div class="pay-actions">
-              <button class="btn ghost" id="discBtn" type="button">Discount</button>
+              <button class="btn ghost" id="discBtn" type="button" data-t>Discount</button>
               <button class="btn primary big" id="payBtn" type="button" disabled>Bayad &amp; Print</button>
             </div>
             <div class="printer-line" id="printerLine"></div>
@@ -102,34 +110,51 @@
     <section class="view" id="view-inventory">
       <div class="toolbar">
         <input id="invSearch" type="search" placeholder="Hanapin sa paninda" autocomplete="off">
-        <button class="btn primary" id="addProduct" type="button">+ Bagong paninda</button>
+        <button class="btn primary" id="addProduct" type="button" data-t>+ Bagong paninda</button>
       </div>
       <div class="filters" id="invFilters">
-        <button type="button" class="chip on" data-f="all">Lahat</button>
-        <button type="button" class="chip" data-f="low">Paubos na</button>
-        <button type="button" class="chip" data-f="out">Ubos na</button>
+        <button type="button" class="chip on" data-f="all" data-t>Lahat</button>
+        <button type="button" class="chip" data-f="low" data-t>Paubos na</button>
+        <button type="button" class="chip" data-f="out" data-t>Ubos na</button>
+        <button type="button" class="chip grid-toggle" id="invGridBtn">Excel view</button>
       </div>
       <div class="inv-summary" id="invSummary"></div>
       <div class="list" id="invList"></div>
     </section>
 
+    <!-- RECEIVING -->
+    <section class="view" id="view-receiving">
+      <div class="toolbar">
+        <div class="filters" id="rcvFilters" style="margin:0;flex:1">
+          <button type="button" class="chip on" data-f="all" data-t>Lahat</button>
+          <button type="button" class="chip" data-f="draft" data-t>Draft</button>
+          <button type="button" class="chip" data-f="posted" data-t>Naka-post</button>
+          <button type="button" class="chip" data-f="void">VOID</button>
+        </div>
+        <button class="btn primary" id="newRcv" type="button" data-t>+ Bagong receiving</button>
+      </div>
+      <div class="stats three" id="rcvStats"></div>
+      <div class="list" id="rcvList"></div>
+      <p class="muted center"><button class="link" id="rcvTemplate" type="button" data-t>I-download ang Excel template para sa invoice</button></p>
+    </section>
+
     <!-- BENTA -->
     <section class="view" id="view-sales">
       <div class="filters" id="salesRange">
-        <button type="button" class="chip on" data-r="today">Ngayon</button>
-        <button type="button" class="chip" data-r="yesterday">Kahapon</button>
-        <button type="button" class="chip" data-r="week">7 araw</button>
-        <button type="button" class="chip" data-r="month">Ngayong buwan</button>
+        <button type="button" class="chip on" data-r="today" data-t>Ngayon</button>
+        <button type="button" class="chip" data-r="yesterday" data-t>Kahapon</button>
+        <button type="button" class="chip" data-r="week" data-t>7 araw</button>
+        <button type="button" class="chip" data-r="month" data-t>Ngayong buwan</button>
         <label class="chip date-chip"><input type="date" id="salesDate"></label>
       </div>
       <div class="stats" id="salesStats"></div>
       <div class="two-col">
         <div class="card">
-          <h3>Pinakamabenta</h3>
+          <h3 data-t>Pinakamabenta</h3>
           <div id="topItems" class="top-items"></div>
         </div>
         <div class="card">
-          <div class="cart-head"><h3>Mga resibo</h3><button class="link" id="salesCsv" type="button">I-export (CSV)</button></div>
+          <div class="cart-head"><h3 data-t>Mga resibo</h3><button class="link" id="salesCsv" type="button" data-t>I-export (Excel)</button></div>
           <div id="salesList" class="list"></div>
         </div>
       </div>
@@ -138,25 +163,26 @@
     <!-- PRINTER -->
     <section class="view" id="view-printer">
       <div class="card">
-        <h3>Paraan ng pag-print</h3>
+        <h3 data-t>Paraan ng pag-print</h3>
         <div class="options" id="printModes"></div>
       </div>
       <div class="card" id="btCard" hidden>
-        <div class="cart-head"><h3>Bluetooth printer</h3><button class="link" id="btRefresh" type="button">I-refresh</button></div>
+        <div class="cart-head"><h3 data-t>Bluetooth printer</h3><button class="link" id="btRefresh" type="button" data-t>I-refresh</button></div>
         <p class="muted" id="btHelp"></p>
         <div id="btList" class="list"></div>
       </div>
       <div class="card">
-        <h3>Resibo</h3>
+        <h3 data-t>Resibo</h3>
         <div class="seg" id="paperSeg">
           <button type="button" data-p="58">58mm</button>
           <button type="button" data-p="80">80mm</button>
         </div>
-        <label class="switch"><input type="checkbox" id="printLogo"><span>Isama ang logo sa resibo</span></label>
-        <label class="switch"><input type="checkbox" id="autoPrint"><span>Kusang mag-print pagkatapos magbayad</span></label>
+        <label class="switch"><input type="checkbox" id="printLogo"><span data-t>Isama ang logo sa resibo</span></label>
+        <label class="switch"><input type="checkbox" id="autoPrint"><span data-t>Kusang mag-print pagkatapos magbayad</span></label>
+        <p class="muted" id="arNote" hidden data-t>Sa Arabic, ipi-print ang resibo bilang larawan para lumabas nang tama ang mga letra.</p>
         <div class="btn-row">
-          <button class="btn primary" id="testPrint" type="button">Test print</button>
-          <button class="btn ghost" id="previewReceipt" type="button">Tingnan ang itsura</button>
+          <button class="btn primary" id="testPrint" type="button" data-t>Test print</button>
+          <button class="btn ghost" id="previewReceipt" type="button" data-t>Tingnan ang itsura</button>
         </div>
       </div>
     </section>
@@ -164,28 +190,29 @@
     <!-- BACKUP -->
     <section class="view" id="view-backup">
       <div class="card">
-        <h3>Backup ng lahat ng data</h3>
-        <p class="muted">Nasa device na ito lang naka-save ang paninda at benta. Mag-backup palagi at itago ang file sa Google Drive, Messenger o email para hindi mawala kapag nasira o napalitan ang phone.</p>
+        <h3 data-t>Backup ng lahat ng data</h3>
+        <p class="muted" data-t>Nasa device na ito lang naka-save ang paninda at benta. Mag-backup palagi at itago ang file sa Google Drive, Messenger o email para hindi mawala kapag nasira o napalitan ang phone.</p>
         <p class="backup-when" id="lastBackup"></p>
         <div class="btn-row">
-          <button class="btn primary" id="exportBackup" type="button">I-save ang backup</button>
-          <button class="btn ghost" id="importBackup" type="button">Ibalik mula sa backup</button>
+          <button class="btn primary" id="exportBackup" type="button" data-t>I-save ang backup</button>
+          <button class="btn ghost" id="importBackup" type="button" data-t>Ibalik mula sa backup</button>
         </div>
         <input type="file" id="importFile" accept=".json,application/json,text/plain" hidden>
       </div>
       <div class="card">
-        <h3>Listahan ng paninda (Excel / CSV)</h3>
-        <p class="muted">I-export ang paninda para ma-edit sa Excel o Google Sheets, o mag-import ng maraming paninda nang sabay. Mga column: name, barcode, price, cost, unit, stock, reorder, category.</p>
+        <h3 data-t>Listahan ng paninda (Excel)</h3>
+        <p class="muted" data-t>I-export ang paninda para ma-edit sa Excel o Google Sheets, o mag-import ng maraming paninda nang sabay (.xlsx o CSV). Mga column: name, barcode, price, cost, unit, stock, reorder, category.</p>
         <div class="btn-row">
-          <button class="btn ghost" id="exportCsv" type="button">I-export ang paninda</button>
-          <button class="btn ghost" id="importCsv" type="button">Mag-import ng paninda</button>
+          <button class="btn ghost" id="exportXlsx" type="button" data-t>I-export sa Excel</button>
+          <button class="btn ghost" id="exportCsv" type="button" data-t>I-export sa CSV</button>
+          <button class="btn ghost" id="importCsv" type="button" data-t>Mag-import ng paninda</button>
         </div>
-        <input type="file" id="csvFile" accept=".csv,text/csv,text/plain" hidden>
+        <input type="file" id="csvFile" accept=".xlsx,.csv,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
       </div>
       <div class="card danger-card">
-        <h3>Burahin lahat</h3>
-        <p class="muted">Buburahin ang lahat ng paninda, benta at settings sa device na ito. Mag-backup muna.</p>
-        <button class="btn danger" id="wipe" type="button">Burahin lahat ng data</button>
+        <h3 data-t>Burahin lahat</h3>
+        <p class="muted" data-t>Buburahin ang lahat ng paninda, benta at settings sa device na ito. Mag-backup muna.</p>
+        <button class="btn danger" id="wipe" type="button" data-t>Burahin lahat ng data</button>
       </div>
       <p class="about" id="about"></p>
     </section>
@@ -193,15 +220,18 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="update-bar" id="updateBar" hidden>
-    <span>May bagong bersyon.</span>
-    <button class="btn small" id="updateBtn" type="button">I-reload</button>
+    <span data-t>May bagong bersyon.</span>
+    <button class="btn small" id="updateBtn" type="button" data-t>I-reload</button>
   </div>
 
   <script src="js/version.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/xlsx.js"></script>
   <script src="js/escpos.js"></script>
+  <script src="js/receipt.js"></script>
   <script src="js/printer.js"></script>
   <script src="js/scanner.js"></script>
+  <script src="js/receiving.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
