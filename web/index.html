@@ -2,6 +2,8 @@
 <html lang="fil">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://ihtwvsjtxpxzaoogfjpd.supabase.co; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1e40af">
   <meta name="description" content="Simple store POS: cashier, inventory, receiving, sales, receipts. Works offline.">
@@ -12,7 +14,7 @@
   <link rel="stylesheet" href="css/app.css">
   <script src="js/i18n.js"></script>
   <script src="js/i18n-dict.js"></script>
-  <script>I18N.apply();</script>
+  <script src="js/boot.js"></script>
 </head>
 <body>
   <header class="top">
@@ -300,6 +302,7 @@
   </div>
 
   <script src="js/version.js"></script>
+  <script src="js/icons.js"></script>
   <script src="js/db.js"></script>
   <script src="js/xlsx.js"></script>
   <script src="js/escpos.js"></script>

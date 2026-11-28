@@ -9,7 +9,7 @@
   const COLORS = ['#1e40af', '#0f766e', '#b91c1c', '#7c3aed', '#c2410c', '#be185d', '#0e7490', '#374151'];
   const UNITS = ['piraso', 'pack', 'sachet', 'bote', 'lata', 'kilo', 'gramo', 'litro', 'box', 'dosena', 'tali', 'tasa'];
 
-  const DEFAULT_STORE = { name: '', address: '', phone: '', tin: '', footer: '', currency: '₱', color: COLORS[0], logo: '', cashier: '', lang: '', methods: null, allowCredit: true, useShift: true, autoLock: 0 };
+  const DEFAULT_STORE = { name: '', address: '', phone: '', tin: '', footer: '', currency: '₱', color: COLORS[0], logo: '', cashier: '', lang: '', methods: null, allowCredit: true, useShift: true, autoLock: 0, theme: 'auto' };
   const CURRENCIES = ['₱', 'PHP ', 'BD ', 'BHD ', 'SAR ', 'AED ', 'KWD ', 'QAR ', 'OMR ', '$', 'US$ ', '€', '£', 'RM ', 'S$ ', 'HK$ ', '¥', 'Rp ', '₹'];
 
   /** Default na paraan ng bayad ayon sa pera (puwedeng palitan sa ⚙). */
@@ -144,18 +144,36 @@
     const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => Math.round(c * pct + 255 * (1 - pct)));
     return 'rgb(' + ch.join(',') + ')';
   }
+  /** Tema: auto (sumusunod sa phone), light o dark. Naka-save din sa localStorage para walang kislap pagbukas. */
+  function applyTheme(v) {
+    const th = v === 'light' || v === 'dark' ? v : 'auto';
+    if (th === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th;
+    try { localStorage.setItem('pos-theme', th); } catch (e) { /* wala */ }
+    const meta = $('meta[name=theme-color]');
+    if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--card').trim());
+  }
+  if (window.matchMedia) {
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    const onMq = () => { if ((S.store.theme || 'auto') === 'auto') applyTheme('auto'); };
+    if (mq.addEventListener) mq.addEventListener('change', onMq);
+  }
+
   function applyStore() {
+    applyTheme(S.store.theme);
     const st = S.store;
     const color = /^#[0-9a-f]{6}$/i.test(st.color) ? st.color : COLORS[0];
     document.documentElement.style.setProperty('--accent', color);
-    document.documentElement.style.setProperty('--accent-soft', mix(color, 0.12));
-    $('meta[name=theme-color]').setAttribute('content', color);
+    // Lumang browser na walang color-mix(): kalkulahin dito ang malabnaw na kulay.
+    if (!(window.CSS && CSS.supports && CSS.supports('color', 'color-mix(in srgb, red 10%, white)'))) document.documentElement.style.setProperty('--accent-soft', mix(color, 0.12));
+    $('meta[name=theme-color]').setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--card').trim() || color);
     if (A && A.setBarColor) try { A.setBarColor(color); } catch (e) { /* luma */ }
     $('#storeName').textContent = st.name || t('Tindahan');
-    const who = S.user ? '👤 ' + S.user.name : '';
     const sh = window.Shift && Shift.current();
-    $('#storeSub').textContent = st.name ? [who, sh ? t('Shift #{n}', { n: sh.no }) : '', who || sh ? '' : (st.address || 'POS')].filter(Boolean).join(' · ') : t('Pindutin para ilagay ang pangalan ng tindahan');
+    const sub = st.name ? [S.user ? S.user.name : '', sh ? t('Shift #{n}', { n: sh.no }) : '', S.user || sh ? '' : (st.address || 'POS')].filter(Boolean).join(' · ') : t('Pindutin para ilagay ang pangalan ng tindahan');
+    $('#storeSub').innerHTML = (S.user && st.name ? ICON('user') : '') + '<span>' + esc(sub) + '</span>';
     $('#lockBtn').hidden = !(window.Staff && Staff.enabled());
+    const dc = dec();
+    $('#cash').placeholder = dc ? '0.' + '0'.repeat(dc) : '0';
     Receipt.setMethods(methods());
     document.title = st.name ? st.name + ' POS' : 'POS';
     const lg = $('#storeLogo');
@@ -252,7 +270,7 @@
     resultSel = list.length ? 0 : -1;
     box.innerHTML = list.length
       ? list.map((p, i) =>
-          '<button type="button" class="result' + (i === 0 ? ' sel' : '') + '" data-id="' + p.id + '">' +
+          '<button type="button" class="result' + (i === 0 ? ' sel' : '') + '" data-id=\"' + escHtml(p.id) + '\">' +
           '<span class="grow"><div class="nm">' + esc(p.name) + '</div>' +
           '<div class="meta">' + (p.barcode ? esc(p.barcode) + ' · ' : '') + esc(t('Stock')) + ': ' + qtyStr(num(p.stock)) + ' ' + esc(p.unit || '') + '</div></span>' +
           '<span class="pr">' + money(p.price) + '</span></button>').join('')
@@ -274,7 +292,7 @@
       .slice(0, 24);
     $('#quick').hidden = !list.length;
     $('#quick').innerHTML = list.map((p) =>
-      '<button type="button" class="tile' + (stockState(p) === 'out' ? ' out' : '') + '" data-id="' + p.id + '">' +
+      '<button type="button" class="tile' + (stockState(p) === 'out' ? ' out' : '') + '" data-id=\"' + escHtml(p.id) + '\">' +
       '<span class="nm">' + esc(p.name) + '</span><span class="pr">' + money(p.price) + '</span></button>').join('');
     $$('#quick .tile').forEach((b) => b.addEventListener('click', () => addToCart(byId(b.dataset.id))));
   }
@@ -313,7 +331,7 @@
     const items = S.cart.reduce((s, l) => s + l.qty, 0);
     $('#cartCount').textContent = S.cart.length ? '(' + qtyStr(items) + ')' : '';
     $('#noteBtn').hidden = !S.cart.length && !S.note;
-    $('#noteBtn').innerHTML = S.note ? '📝 <b>' + esc(t('Tala')) + ':</b> ' + esc(S.note) : esc(t('+ Tala sa order (hal. para kanino, oras ng delivery, mensahe sa card)'));
+    $('#noteBtn').innerHTML = S.note ? ICON('note') + '<b>' + esc(t('Tala')) + ':</b> ' + esc(S.note) : esc(t('+ Tala sa order (hal. para kanino, oras ng delivery, mensahe sa card)'));
     $('#noteBtn').classList.toggle('on', !!S.note);
     $('#clearCart').hidden = !S.cart.length;
     if (!S.cart.length) S.discount = 0;
@@ -344,7 +362,7 @@
     const c = S.customer;
     const b = $('#custBtn');
     b.classList.toggle('on', !!c);
-    b.innerHTML = '<span class="avatar sm">' + (c ? esc(Customers.initials(c.name)) : '👤') + '</span><span class="grow">' +
+    b.innerHTML = '<span class="avatar sm">' + (c ? esc(Customers.initials(c.name)) : ICON('user')) + '</span><span class="grow">' +
       (c ? '<b>' + esc(c.name) + '</b>' + (c._bal > 0 ? ' <span class="badge low">' + esc(t('Utang')) + ' ' + money(c._bal) + '</span>' : '')
         : esc(t('Walk-in · pindutin para pumili ng suki'))) + '</span>' + (c ? '<span class="x" data-clear>×</span>' : '');
   }
@@ -560,15 +578,36 @@
     }
     const list = filteredProducts();
     if (S.invGrid) return renderInvGrid(list);
-    el.innerHTML = list.length ? list.map((p) => {
+    if (!list.length) { el.innerHTML = '<p class="muted" style="text-align:center;padding:20px">' + esc(t('Walang tugma.')) + '</p>'; return; }
+    const row = (p) => {
       const st = stockState(p);
-      return '<button type="button" class="item" data-id="' + p.id + '"><span class="grow">' +
+      return '<button type="button" class="item" data-id="' + escHtml(p.id) + '"><span class="grow">' +
         '<div class="nm">' + esc(p.name) + '</div>' +
         '<div class="meta">' + [p.barcode, p.category].filter(Boolean).map(esc).join(' · ') + '</div></span>' +
         '<span class="right"><div class="pr">' + money(p.price) + '</div>' +
         '<span class="badge ' + (st === 'ok' ? '' : st) + '">' + qtyStr(num(p.stock)) + ' ' + esc(p.unit || '') + '</span></span></button>';
-    }).join('') : '<p class="muted" style="text-align:center;padding:20px">' + esc(t('Walang tugma.')) + '</p>';
-    $$('#invList .item').forEach((b) => b.addEventListener('click', () => editProduct(byId(b.dataset.id))));
+    };
+    // Paunti-unti ang render (120 bawat batch) para mabilis kahit libo-libo ang paninda.
+    const STEP = 120;
+    let shown = 0;
+    el.innerHTML = '';
+    const more = () => {
+      const old = el.querySelector('.more-sentinel');
+      if (old) old.remove();
+      el.insertAdjacentHTML('beforeend', list.slice(shown, shown + STEP).map(row).join(''));
+      shown += STEP;
+      if (shown < list.length) {
+        el.insertAdjacentHTML('beforeend', '<button type="button" class="btn ghost more-sentinel">' + esc(t('Ipakita pa ({n})', { n: list.length - shown })) + '</button>');
+        const sen = el.querySelector('.more-sentinel');
+        sen.onclick = more;
+        if (window.IntersectionObserver) {
+          const io = new IntersectionObserver((en) => { if (en[0].isIntersecting) { io.disconnect(); more(); } }, { rootMargin: '600px' });
+          io.observe(sen);
+        }
+      }
+    };
+    more();
+    el.onclick = (e) => { const b = e.target.closest('.item[data-id]'); if (b) editProduct(byId(b.dataset.id)); };
   }
 
   // Excel-style na pag-edit ng maraming paninda
@@ -594,7 +633,7 @@
       GRID.map((c) => '<th style="min-width:' + c.w + 'px">' + esc(t(c.label)) + '</th>').join('') + '</tr></thead><tbody>' +
       list.map((p, i) => {
         const e = gridEdits[p.id] || {};
-        return '<tr data-id="' + p.id + '" class="' + stockState(p) + '"><td class="rn">' + (i + 1) + '</td>' + GRID.map((c) => {
+        return '<tr data-id=\"' + escHtml(p.id) + '\" class="' + stockState(p) + '"><td class="rn">' + (i + 1) + '</td>' + GRID.map((c) => {
           const v = c.k in e ? e[c.k] : (p[c.k] == null ? '' : p[c.k]);
           return '<td' + (c.k in e ? ' class="dirty"' : '') + '><input data-k="' + c.k + '" data-r="' + i + '" type="text"' + (c.num ? ' inputmode="decimal" class="num"' : '') + ' value="' + esc(v) + '"></td>';
         }).join('') + '</tr>';
@@ -790,9 +829,9 @@
     const short = ['today', 'yesterday', 'day'].includes(S.salesRange);
     const shown = showAll === true ? sales : sales.slice(0, 25);
     $('#salesList').innerHTML = (sales.length ? shown.map((s) =>
-      '<button type="button" class="item" data-id="' + s.id + '"><span class="grow">' +
+      '<button type="button" class="item" data-id=\"' + escHtml(s.id) + '\"><span class="grow">' +
       '<div class="nm">#' + s.no + ' · ' + esc(short ? fmtTime(s.time) : fmtDateTime(s.time)) + '</div>' +
-      '<div class="meta">' + (s.customerName ? '👤 ' + esc(s.customerName) + ' · ' : '') + esc(s.items.map((i) => i.name).join(', ').slice(0, 80)) + '</div></span>' +
+      '<div class="meta">' + (s.customerName ? ICON('user') + ' ' + esc(s.customerName) + ' · ' : '') + esc(s.items.map((i) => i.name).join(', ').slice(0, 80)) + '</div></span>' +
       '<span class="right"><div class="pr">' + money(s.total) + '</div>' + (s.voided ? '<span class="badge void">VOID</span>'
         : s.credit ? '<span class="badge low">' + esc(t('Utang')) + '</span>' : s.method && s.method !== 'cash' ? '<span class="meta">' + esc(Receipt.METHOD_LABEL(s.method)) + '</span>' : '') + '</span></button>').join('')
       : '<p class="muted">' + esc(t('Walang resibo sa panahong ito.')) + '</p>') +
@@ -1091,6 +1130,8 @@
     modal(
       '<h2>' + esc(first ? t('Maligayang pagdating! Ano ang pangalan ng tindahan mo?') : t('Tindahan')) + '</h2>' +
       '<div class="seg lang-seg" id="sLang">' + Object.keys(I18N.LANGS).map((l) => '<button type="button" data-l="' + l + '"' + (I18N.lang === l ? ' class="on"' : '') + '>' + I18N.LANGS[l] + '</button>').join('') + '</div>' +
+      '<div class="field"><span>' + esc(t('Itsura')) + '</span><div class="seg theme-seg" id="sTheme">' +
+      [['auto', t('Auto')], ['light', t('Maliwanag')], ['dark', t('Madilim')]].map(([v, l]) => '<button type="button" data-th="' + v + '"' + ((st.theme || 'auto') === v ? ' class="on"' : '') + '>' + ICON(v === 'auto' ? 'auto' : v === 'light' ? 'sun' : 'moon') + esc(l) + '</button>').join('') + '</div></div>' +
       (first ? '<p class="muted">' + esc(t('Lalabas ito sa itaas ng app at sa resibo. Puwedeng palitan anumang oras sa ⚙.')) + '</p>' : '') +
       '<div class="logo-pick"><span class="logo" id="sLogo"></span><span class="btn-row" style="flex:1">' +
       '<button class="btn ghost" id="sLogoBtn" type="button">' + esc(t('Pumili ng logo')) + '</button>' +
@@ -1145,6 +1186,12 @@
           Object.assign(S.store, keep, { logo: st.logo, color: st.color });
           if (!S.store.footer || S.store.footer === oldFooter) S.store.footer = '';
           editStore(first);
+        }));
+        $$('#sTheme button', m).forEach((b) => b.addEventListener('click', () => {
+          // Agad na makikita at naka-save, kahit hindi pa pinipindot ang I-save
+          S.store.theme = st.theme = b.dataset.th;
+          saveStore(); applyTheme(st.theme);
+          $$('#sTheme button', m).forEach((x) => x.classList.toggle('on', x === b));
         }));
         $('#sName', m).addEventListener('input', drawLogo);
         if (first) setTimeout(() => $('#sName', m).focus(), 80);

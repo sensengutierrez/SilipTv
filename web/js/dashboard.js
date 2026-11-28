@@ -163,7 +163,7 @@
 
     // May utang
     $('#dashDebt').innerHTML = debtors.length ? debtors.slice(0, 6).map((c) =>
-      '<button type="button" class="ti link-row" data-c="' + c.id + '"><span>' + esc(c.name) + '</span><b class="warn-t">' + money(info[c.id].balance) + '</b></button>').join('')
+      '<button type="button" class="ti link-row" data-c=\"' + escHtml(c.id) + '\"><span>' + esc(c.name) + '</span><b class="warn-t">' + money(info[c.id].balance) + '</b></button>').join('')
       : '<p class="muted">' + esc(t('Walang may utang.')) + '</p>';
     $$('#dashDebt [data-c]').forEach((b) => b.addEventListener('click', () => window.Customers.view(b.dataset.c)));
 

@@ -20,7 +20,7 @@ Gumagana sa **Android phone (APK)** at bilang **website** (puwedeng i-install sa
 - **Iba pa → Staff**: admin at mga cashier na may PIN. May lock screen (🔒) at auto-lock. Nakatala ang cashier sa bawat resibo. Admin lang ang makakapag-void, makakapagbago ng settings, printer at backup (o mag-PIN ang admin para payagan).
 - **Iba pa → Printer**: Bluetooth thermal printer (58mm/80mm) sa Android app, Bluetooth (BLE) sa Chrome, o ordinaryong print/PDF. May logo sa resibo at test print. Kapag Arabic o may letrang hindi kaya ng printer, ipi-print bilang larawan kaya tama ang lalabas.
 - **Iba pa → Backup**: i-save ang lahat ng data bilang file at ibalik sa ibang phone; export/import ng paninda sa Excel (.xlsx) o CSV. Kasama sa backup ang receivings, suki at bayad sa utang.
-- **⚙ Tindahan**: pangalan, logo, address, contact, cashier, mensahe sa resibo, simbolo ng pera (₱, BHD at iba pa; 3 decimal sa BHD), mga paraan ng bayad, payagan ang utang, kulay ng app, at **wika**.
+- **⚙ Tindahan**: pangalan, logo, address, contact, cashier, mensahe sa resibo, simbolo ng pera (₱, BHD at iba pa; 3 decimal sa BHD), mga paraan ng bayad, payagan ang utang, kulay ng app, **itsura** (Auto, Maliwanag o Madilim/dark mode) at **wika**.
 
 ## Wika
 
@@ -46,11 +46,19 @@ Mga MCP tool: `get_store`, `get_sales_summary`, `list_products`, `list_sales`, `
 
 Ang server ay isang Supabase Edge Function (`supabase/functions/pos`, libreng plan) at ang database ay nasa `supabase/migrations`. Naka-hash (SHA-256) ang device token at API keys, at walang direktang access sa mga table (RLS na walang policy). Ang **Idiskonekta** ay nagbubura ng kopya sa cloud; nananatili ang data sa device.
 
+## Para sa developer
+
+Basahin muna ang [CLAUDE.md](CLAUDE.md) (mapa ng project at mga patakaran), tapos ang [docs/](docs/):
+[ARCHITECTURE](docs/ARCHITECTURE.md), [DATA](docs/DATA.md), [RELEASE](docs/RELEASE.md), [CLOUD-API](docs/CLOUD-API.md), [SECURITY](docs/SECURITY.md) at [HOW-TO](docs/HOW-TO.md).
+
 ## Folders
 
 ```
 ├── web/                Ang POS mismo (HTML/CSS/JS, offline, IndexedDB)
 ├── android/            Android app: WebView na may laman na web/, Bluetooth printer, Google barcode scanner, auto update
+├── docs/               Paliwanag kung paano ginawa (architecture, data, release, cloud, security)
+├── tests/              Playwright tests (daloy, security, bilis)
+├── tools/              i18n_check.py (hanapin ang text na walang salin)
 ├── supabase/           Cloud sync, REST at MCP para sa AI agents (Edge Function + migration)
 └── .github/workflows/  android.yml (APK sa Releases), pages.yml (website sa GitHub Pages)
 ```

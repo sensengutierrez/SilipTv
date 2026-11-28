@@ -12,6 +12,9 @@ const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
   auth: { persistSession: false },
 });
 
+const MAX_BODY = 6_000_000; // bytes kada request
+const MAX_DOC = 256_000; // bytes kada record (hal. isang resibo)
+const num = (v: unknown, def: number, max: number) => Math.max(1, Math.min(max, Math.floor(Number(v)) || def));
 const KINDS = ["store", "products", "sales", "customers", "payments", "receivings", "shifts"];
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -56,6 +59,10 @@ async function storeByApiKey(key: string) {
 async function handleSync(req: Request, url: URL, path: string[]) {
   const action = path[0];
   if (action === "register" && req.method === "POST") {
+    // Limit laban sa abuso: hindi hihigit sa 30 bagong tindahan kada oras (sa lahat).
+    const since = new Date(Date.now() - 3600000).toISOString();
+    const { count } = await db.from("stores").select("id", { count: "exact", head: true }).gte("created_at", since);
+    if ((count || 0) >= 30) return fail(429, "Too many new stores, try again later");
     const body = await req.json().catch(() => ({}));
     const token = randomToken("dev_", 32);
     const { data, error } = await db.from("stores").insert({ name: String(body.name || "").slice(0, 120), device_token_hash: await sha256(token) }).select("id").single();
@@ -68,7 +75,8 @@ async function handleSync(req: Request, url: URL, path: string[]) {
   if (action === "push" && req.method === "POST") {
     const body = await req.json().catch(() => null);
     if (!body) return fail(400, "Invalid JSON");
-    const docs = (Array.isArray(body.docs) ? body.docs : []).filter((d: any) => d && KINDS.includes(d.kind) && d.id != null && d.data);
+    const docs = (Array.isArray(body.docs) ? body.docs : []).filter((d: any) => d && KINDS.includes(d.kind) && d.id != null && d.data && typeof d.data === "object");
+    if (docs.some((d: any) => String(d.id).length > 100 || JSON.stringify(d.data).length > MAX_DOC)) return fail(413, "Document too large");
     const deleted = (Array.isArray(body.deleted) ? body.deleted : []).filter((d: any) => d && KINDS.includes(d.kind) && d.id != null);
     if (docs.length > 1000 || deleted.length > 1000) return fail(413, "Max 1000 per push");
     if (docs.length) {
@@ -238,9 +246,9 @@ async function handleApi(req: Request, url: URL, path: string[], base: string) {
     case "store": return json(await storeInfo(store));
     case "summary": return json({ store: await storeInfo(store), ...(await summary(store, from, to)) });
     case "products": return json({ products: await products(store, q.get("q"), q.get("low") === "true" || q.get("low") === "1") });
-    case "sales": return json({ sales: await salesList(store, from, to, Number(q.get("limit") || 100)) });
+    case "sales": return json({ sales: await salesList(store, from, to, num(q.get("limit"), 100, 500)) });
     case "customers": return json({ customers: await customers(store, q.get("debt") === "true" || q.get("debt") === "1") });
-    case "shifts": return json({ shifts: await shifts(store, Number(q.get("limit") || 20)) });
+    case "shifts": return json({ shifts: await shifts(store, num(q.get("limit"), 20, 200)) });
   }
   return fail(404, "Not found");
 }
@@ -265,9 +273,9 @@ async function callTool(store: any, name: string, a: any) {
     case "get_store": return storeInfo(store);
     case "get_sales_summary": return { store: await storeInfo(store), ...(await summary(store, from, to)) };
     case "list_products": return { products: await products(store, a?.query, !!a?.low_stock_only) };
-    case "list_sales": return { sales: await salesList(store, from, to, Number(a?.limit || 100)) };
+    case "list_sales": return { sales: await salesList(store, from, to, num(a?.limit, 100, 500)) };
     case "list_customers": return { customers: await customers(store, !!a?.with_balance_only) };
-    case "list_shifts": return { shifts: await shifts(store, Number(a?.limit || 20)) };
+    case "list_shifts": return { shifts: await shifts(store, num(a?.limit, 20, 200)) };
   }
   throw new Error("Unknown tool: " + name);
 }
@@ -303,6 +311,7 @@ async function handleMcp(req: Request, url: URL) {
     }
   };
   if (Array.isArray(body)) {
+    if (body.length > 20) return json({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Batch too large" } }, 400);
     const out = (await Promise.all(body.map(one))).filter(Boolean);
     return out.length ? json(out) : new Response(null, { status: 202, headers: CORS });
   }
@@ -312,6 +321,7 @@ async function handleMcp(req: Request, url: URL) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+  if (Number(req.headers.get("content-length") || 0) > MAX_BODY) return fail(413, "Request too large");
   const url = new URL(req.url);
   const parts = url.pathname.split("/").filter(Boolean);
   const i = parts.indexOf("pos");
