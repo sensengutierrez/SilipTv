@@ -1903,5 +1903,161 @@ window.I18N_DICT = {
 "Lock": {
 "en": "Lock",
 "ar": "قفل"
+},
+"Hindi na kilala ng cloud ang device na ito. Idiskonekta at ikonekta ulit.": {
+"en": "The cloud no longer recognizes this device. Disconnect and connect again.",
+"ar": "لم تعد السحابة تتعرف على هذا الجهاز. افصل ثم اتصل مرة أخرى."
+},
+"Nakakonekta na sa cloud": {
+"en": "Connected to the cloud",
+"ar": "تم الاتصال بالسحابة"
+},
+"Hindi makakonekta: {e}": {
+"en": "Can't connect: {e}",
+"ar": "تعذر الاتصال: {e}"
+},
+"Idiskonekta sa cloud?": {
+"en": "Disconnect from the cloud?",
+"ar": "قطع الاتصال بالسحابة؟"
+},
+"Buburahin ang kopya ng data sa cloud at hindi na gagana ang mga API key. Mananatili ang lahat ng data sa device na ito.": {
+"en": "The copy of your data in the cloud will be deleted and API keys will stop working. All data stays on this device.",
+"ar": "سيتم حذف نسخة البيانات في السحابة وستتوقف مفاتيح API. تبقى كل البيانات على هذا الجهاز."
+},
+"Idiskonekta": {
+"en": "Disconnect",
+"ar": "قطع الاتصال"
+},
+"Nadiskonekta na": {
+"en": "Disconnected",
+"ar": "تم قطع الاتصال"
+},
+"Pangalan ng API key": {
+"en": "API key name",
+"ar": "اسم مفتاح API"
+},
+"hal. Claude": {
+"en": "e.g. Claude",
+"ar": "مثال: Claude"
+},
+"Bawiin ang API key?": {
+"en": "Revoke this API key?",
+"ar": "إلغاء مفتاح API؟"
+},
+"Hindi na makakabasa ng data ang AI na gumagamit nito.": {
+"en": "The AI using it will no longer be able to read your data.",
+"ar": "لن يتمكن الذكاء الاصطناعي الذي يستخدمه من قراءة بياناتك."
+},
+"Bawiin": {
+"en": "Revoke",
+"ar": "إلغاء"
+},
+"Nakopya": {
+"en": "Copied",
+"ar": "تم النسخ"
+},
+"Kopyahin": {
+"en": "Copy",
+"ar": "نسخ"
+},
+"Bagong API key": {
+"en": "New API key",
+"ar": "مفتاح API جديد"
+},
+"Paano ikonekta ang AI": {
+"en": "How to connect AI",
+"ar": "كيفية ربط الذكاء الاصطناعي"
+},
+"Isang beses lang ipapakita ang key na ito. Kopyahin at itago. Kahit sino na may hawak nito ay makakabasa ng benta mo.": {
+"en": "This key is shown only once. Copy it and keep it safe. Anyone who has it can read your sales.",
+"ar": "يظهر هذا المفتاح مرة واحدة فقط. انسخه واحفظه. أي شخص يملكه يمكنه قراءة مبيعاتك."
+},
+"API key": {
+"en": "API key",
+"ar": "مفتاح API"
+},
+"MCP URL (para sa Claude, ChatGPT at iba pa)": {
+"en": "MCP URL (for Claude, ChatGPT and others)",
+"ar": "رابط MCP (لـ Claude وChatGPT وغيرها)"
+},
+"OpenAPI (REST)": {
+"en": "OpenAPI (REST)",
+"ar": "OpenAPI (REST)"
+},
+"Settings > Connectors > Add custom connector, at i-paste ang MCP URL.": {
+"en": "Settings > Connectors > Add custom connector, then paste the MCP URL.",
+"ar": "الإعدادات > Connectors > Add custom connector، ثم الصق رابط MCP."
+},
+"Sa Settings > Apps & Connectors (Developer mode), gumawa ng connector at i-paste ang MCP URL. O sa Custom GPT > Actions, i-import ang OpenAPI URL at ilagay ang API key bilang Bearer.": {
+"en": "In Settings > Apps & Connectors (Developer mode), create a connector and paste the MCP URL. Or in a Custom GPT > Actions, import the OpenAPI URL and set the API key as Bearer.",
+"ar": "في الإعدادات > Apps & Connectors (وضع المطور)، أنشئ موصلاً والصق رابط MCP. أو في Custom GPT > Actions، استورد رابط OpenAPI وضع مفتاح API كـ Bearer."
+},
+"Sa Gemini CLI, xAI API o ibang app na may MCP, gamitin ang MCP URL. Para sa REST, gamitin ang OpenAPI URL at ang header na Authorization: Bearer {k}.": {
+"en": "In Gemini CLI, the xAI API or any app with MCP, use the MCP URL. For REST, use the OpenAPI URL with the header Authorization: Bearer {k}.",
+"ar": "في Gemini CLI أو xAI API أو أي تطبيق يدعم MCP، استخدم رابط MCP. لواجهة REST، استخدم رابط OpenAPI مع الترويسة Authorization: Bearer {k}."
+},
+"Read-only ang access: makikita ng AI ang benta, paninda at stock, suki at utang, at kaha. Hindi ito makakapagbago ng data. Hindi kasama ang staff at PIN.": {
+"en": "Access is read-only: the AI can see sales, products and stock, customers and credit, and the cash drawer. It can't change data. Staff and PINs are not included.",
+"ar": "الوصول للقراءة فقط: يرى الذكاء الاصطناعي المبيعات والمنتجات والمخزون والعملاء والديون والصندوق. لا يمكنه تغيير البيانات. لا يشمل الموظفين والرموز."
+},
+"Cloud at API para sa AI": {
+"en": "Cloud and API for AI",
+"ar": "السحابة وواجهة API للذكاء الاصطناعي"
+},
+"Ikonekta para makita ng AI agent (Claude, ChatGPT, Gemini, Grok) ang benta, paninda, suki at kaha mo, at matanong mo sila tulad ng \"magkano ang benta ngayong linggo?\" o \"ano ang dapat i-order?\". Read-only ang access. Hindi ipinapadala ang staff at PIN.": {
+"en": "Connect so AI agents (Claude, ChatGPT, Gemini, Grok) can see your sales, products, customers and cash drawer, and you can ask things like \"how much did we sell this week?\" or \"what should I reorder?\". Access is read-only. Staff and PINs are never sent.",
+"ar": "اتصل ليتمكن وكلاء الذكاء الاصطناعي (Claude وChatGPT وGemini وGrok) من رؤية مبيعاتك ومنتجاتك وعملائك والصندوق، وتسألهم مثل \"كم بعنا هذا الأسبوع؟\" أو \"ماذا يجب أن أطلب؟\". الوصول للقراءة فقط. لا تُرسل بيانات الموظفين والرموز."
+},
+"Ikonekta sa cloud": {
+"en": "Connect to cloud",
+"ar": "الاتصال بالسحابة"
+},
+"Nagsi-sync…": {
+"en": "Syncing…",
+"ar": "جارٍ المزامنة…"
+},
+"Hindi na-sync: {e}": {
+"en": "Sync failed: {e}",
+"ar": "فشلت المزامنة: {e}"
+},
+"Huling sync: {d}": {
+"en": "Last sync: {d}",
+"ar": "آخر مزامنة: {d}"
+},
+"Hindi pa na-sync": {
+"en": "Not synced yet",
+"ar": "لم تتم المزامنة بعد"
+},
+"Hindi makuha ang listahan ng key. Tingnan ang internet.": {
+"en": "Can't load the key list. Check the internet.",
+"ar": "تعذر تحميل قائمة المفاتيح. تحقق من الإنترنت."
+},
+"Huling gamit: {d}": {
+"en": "Last used: {d}",
+"ar": "آخر استخدام: {d}"
+},
+"Hindi pa nagagamit": {
+"en": "Not used yet",
+"ar": "لم يُستخدم بعد"
+},
+"Wala pang API key. Gumawa ng isa para sa bawat AI na ikokonekta mo.": {
+"en": "No API keys yet. Create one for each AI you connect.",
+"ar": "لا توجد مفاتيح API بعد. أنشئ مفتاحاً لكل ذكاء اصطناعي تربطه."
+},
+"Nakakonekta": {
+"en": "Connected",
+"ar": "متصل"
+},
+"I-sync ngayon": {
+"en": "Sync now",
+"ar": "زامن الآن"
+},
+"API keys": {
+"en": "API keys",
+"ar": "مفاتيح API"
+},
+"+ Gumawa ng API key": {
+"en": "+ Create API key",
+"ar": "+ إنشاء مفتاح API"
 }
 };

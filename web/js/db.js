@@ -4,6 +4,8 @@
   const DB_NAME = 'pos-db';
   const VERSION = 4;
   const STORES = ['products', 'sales', 'meta', 'receivings', 'customers', 'payments', 'staff', 'shifts'];
+  // Koneksyon sa cloud: hindi isinasama sa backup file at hindi napapalitan kapag nag-restore.
+  const KEEP_META = ['cloud', 'cloudHashes'];
   let dbp = null;
 
   function open() {
@@ -169,7 +171,7 @@
 
     async exportAll() {
       const [products, sales, meta, receivings, customers, payments, staff, shifts] = await Promise.all(STORES.map((n) => DB.all(n)));
-      return { app: 'pos', format: 4, exported: new Date().toISOString(), products, sales, receivings, customers, payments, staff, shifts, meta };
+      return { app: 'pos', format: 4, exported: new Date().toISOString(), products, sales, receivings, customers, payments, staff, shifts, meta: meta.filter((m) => !KEEP_META.includes(m.key)) };
     },
 
     /** Palitan lahat ng data mula sa backup. */
@@ -177,12 +179,14 @@
       if (!data || data.app !== 'pos' || !Array.isArray(data.products) || !Array.isArray(data.sales)) {
         return Promise.reject(new Error('Hindi ito backup file ng POS na ito.'));
       }
-      return tx(STORES, 'readwrite', (t) => {
+      return tx(STORES, 'readwrite', async (t) => {
+        const keep = (await Promise.all(KEEP_META.map((k) => wrap(t.objectStore('meta').get(k))))).filter(Boolean);
         STORES.forEach((s) => t.objectStore(s).clear());
+        keep.forEach((m) => t.objectStore('meta').put(m));
         ['receivings', 'customers', 'payments', 'staff', 'shifts'].forEach((n) => (data[n] || []).forEach((r) => r && r.id && t.objectStore(n).put(r)));
         data.products.forEach((p) => p && p.id && t.objectStore('products').put(p));
         data.sales.forEach((s) => s && s.id && t.objectStore('sales').put(s));
-        (data.meta || []).forEach((m) => m && m.key && t.objectStore('meta').put(m));
+        (data.meta || []).forEach((m) => m && m.key && !KEEP_META.includes(m.key) && t.objectStore('meta').put(m));
       });
     },
 
