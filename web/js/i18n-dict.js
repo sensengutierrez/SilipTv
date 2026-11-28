@@ -2059,5 +2059,25 @@ window.I18N_DICT = {
 "+ Gumawa ng API key": {
 "en": "+ Create API key",
 "ar": "+ إنشاء مفتاح API"
+},
+"Itsura": {
+"en": "Appearance",
+"ar": "المظهر"
+},
+"Maliwanag": {
+"en": "Light",
+"ar": "فاتح"
+},
+"Madilim": {
+"en": "Dark",
+"ar": "داكن"
+},
+"Maraming maling PIN. Subukan ulit pagkalipas ng {n} segundo.": {
+"en": "Too many wrong PINs. Try again in {n} seconds.",
+"ar": "رموز خاطئة كثيرة. حاول مرة أخرى بعد {n} ثانية."
+},
+"Ipakita pa ({n})": {
+"en": "Show more ({n})",
+"ar": "عرض المزيد ({n})"
 }
 };

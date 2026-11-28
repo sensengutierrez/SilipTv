@@ -226,7 +226,7 @@
     const past = (await DB.all('shifts')).filter((s) => s.closedAt).sort((a, b) => b.closedAt - a.closedAt).slice(0, 30);
     $('#shiftHist').innerHTML = past.length ? past.map((s) => {
       const d = K().r2(s.counted - s.expected);
-      return '<button type="button" class="item" data-id="' + s.id + '"><span class="grow"><div class="nm">' + esc(t('Shift #{n}', { n: s.no })) + ' · ' + esc(fmtDateTime(s.openedAt)) + '</div>' +
+      return '<button type="button" class="item" data-id=\"' + escHtml(s.id) + '\"><span class="grow"><div class="nm">' + esc(t('Shift #{n}', { n: s.no })) + ' · ' + esc(fmtDateTime(s.openedAt)) + '</div>' +
         '<div class="meta">' + esc((s.openedBy || '') + (s.closedBy && s.closedBy !== s.openedBy ? ' → ' + s.closedBy : '')) + '</div></span>' +
         '<span class="right"><div class="pr">' + money(s.summary ? s.summary.total : 0) + '</div>' +
         (d ? '<span class="badge ' + (d < 0 ? 'out' : 'low') + '">' + esc(d < 0 ? t('Kulang') : t('Sobra')) + ' ' + money(Math.abs(d)) + '</span>' : '<span class="badge">' + esc(t('Sakto')) + '</span>') + '</span></button>';

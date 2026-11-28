@@ -60,7 +60,7 @@
     }
     $('#custList').innerHTML = list.length ? list.map((c) => {
       const x = C.info[c.id];
-      return '<button type="button" class="item" data-id="' + c.id + '"><span class="avatar">' + esc(initials(c.name)) + '</span><span class="grow">' +
+      return '<button type="button" class="item" data-id=\"' + escHtml(c.id) + '\"><span class="avatar">' + esc(initials(c.name)) + '</span><span class="grow">' +
         '<div class="nm">' + esc(c.name) + '</div>' +
         '<div class="meta">' + esc([c.phone, c.email].filter(Boolean).join(' · ') || t('Walang contact')) +
         (x.last ? ' · ' + esc(t('Huli: {d}', { d: fmtDateTime(x.last) })) : '') + '</div></span>' +
@@ -137,12 +137,12 @@
     const hist = rows.length ? rows.slice(0, 100).map((r) => {
       if (r.kind === 's') {
         const s = r.x;
-        return '<button type="button" class="item" data-sale="' + s.id + '"><span class="grow"><div class="nm">#' + s.no + ' · ' + esc(fmtDateTime(s.time)) + '</div>' +
+        return '<button type="button" class="item" data-sale=\"' + escHtml(s.id) + '\"><span class="grow"><div class="nm">#' + s.no + ' · ' + esc(fmtDateTime(s.time)) + '</div>' +
           '<div class="meta">' + esc(s.items.map((i) => i.name).join(', ').slice(0, 70)) + '</div></span><span class="right"><div class="pr">' + money(s.total) + '</div>' +
           (s.voided ? '<span class="badge void">VOID</span>' : s.credit ? '<span class="badge low">' + esc(t('Utang')) + ' ' + money(s.credit) + '</span>' : '<span class="meta">' + esc(s.methodLabel || Receipt.METHOD_LABEL(s.method || 'cash')) + '</span>') + '</span></button>';
       }
       const p = r.x;
-      return '<button type="button" class="item" data-pay="' + p.id + '"><span class="grow"><div class="nm">' + esc(t('Bayad sa utang')) + ' · ' + esc(fmtDateTime(p.time)) + '</div>' +
+      return '<button type="button" class="item" data-pay=\"' + escHtml(p.id) + '\"><span class="grow"><div class="nm">' + esc(t('Bayad sa utang')) + ' · ' + esc(fmtDateTime(p.time)) + '</div>' +
         '<div class="meta">' + esc([p.methodLabel || Receipt.METHOD_LABEL(p.method || 'cash'), p.note].filter(Boolean).join(' · ')) + '</div></span>' +
         '<span class="right"><div class="pr ok">−' + money(p.amount) + '</div>' + (p.voided ? '<span class="badge void">VOID</span>' : '') + '</span></button>';
     }).join('') : '<p class="muted">' + esc(t('Wala pang bili.')) + '</p>';
@@ -253,10 +253,10 @@
   // ---------- mga button sa pagpapadala (ginagamit din sa resibo ng benta) ----------
   function sendButtons(c) {
     const { S, t, esc } = K();
-    return (S.printer.mode !== 'none' ? '<button class="btn ghost" data-send="print" type="button">🖨 ' + esc(t('Print')) + '</button>' : '') +
+    return (S.printer.mode !== 'none' ? '<button class="btn ghost" data-send="print" type="button">' + ICON('printer') + esc(t('Print')) + '</button>' : '') +
       '<button class="btn wa" data-send="wa" type="button">WhatsApp</button>' +
-      '<button class="btn ghost" data-send="mail" type="button">Email</button>' +
-      '<button class="btn ghost" data-send="img" type="button">' + esc(t('I-share (larawan)')) + '</button>';
+      '<button class="btn ghost" data-send="mail" type="button">' + ICON('mail') + 'Email</button>' +
+      '<button class="btn ghost" data-send="img" type="button">' + ICON('share') + esc(t('I-share (larawan)')) + '</button>';
   }
 
   function bindSend(m, doc, c, subject, fileName) {
@@ -310,7 +310,7 @@
               .sort((a, b) => (C.info[b.id].last || 0) - (C.info[a.id].last || 0)).slice(0, 60);
             $('#pkList', m).innerHTML = list.length ? list.map((c) => {
               const x = C.info[c.id];
-              return '<button type="button" class="item' + (c.id === currentId ? ' sel' : '') + '" data-id="' + c.id + '"><span class="avatar">' + esc(initials(c.name)) + '</span>' +
+              return '<button type="button" class="item' + (c.id === currentId ? ' sel' : '') + '" data-id=\"' + escHtml(c.id) + '\"><span class="avatar">' + esc(initials(c.name)) + '</span>' +
                 '<span class="grow"><div class="nm">' + esc(c.name) + '</div><div class="meta">' + esc(c.phone || c.email || '') + '</div></span>' +
                 (x.balance > 0 ? '<span class="badge low">' + money(x.balance) + '</span>' : '') + '</button>';
             }).join('') : '<p class="muted">' + esc(C.list.length ? t('Walang nahanap.') : t('Wala pang suki. Pindutin ang "+ Bago".')) + '</p>';

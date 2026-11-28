@@ -1,4 +1,7 @@
 /* Lokal na database (IndexedDB). Nasa device lang ang data: walang server, walang account. */
+/** Para sa HTML attribute/text: ginagamit kahit sa mga id (puwedeng galing sa in-import na file). */
+window.escHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
 (function () {
   'use strict';
   const DB_NAME = 'pos-db';
@@ -183,10 +186,10 @@
         const keep = (await Promise.all(KEEP_META.map((k) => wrap(t.objectStore('meta').get(k))))).filter(Boolean);
         STORES.forEach((s) => t.objectStore(s).clear());
         keep.forEach((m) => t.objectStore('meta').put(m));
-        ['receivings', 'customers', 'payments', 'staff', 'shifts'].forEach((n) => (data[n] || []).forEach((r) => r && r.id && t.objectStore(n).put(r)));
-        data.products.forEach((p) => p && p.id && t.objectStore('products').put(p));
-        data.sales.forEach((s) => s && s.id && t.objectStore('sales').put(s));
-        (data.meta || []).forEach((m) => m && m.key && !KEEP_META.includes(m.key) && t.objectStore('meta').put(m));
+        // Tanggapin lang ang mga record na may maayos na id (proteksyon laban sa sirang o pinakialamang backup file).
+        const okId = (r) => r && typeof r === 'object' && (typeof r.id === 'string' || typeof r.id === 'number') && /^[\w.:-]{1,80}$/.test(String(r.id));
+        ['receivings', 'customers', 'payments', 'staff', 'shifts', 'products', 'sales'].forEach((n) => (Array.isArray(data[n]) ? data[n] : []).forEach((r) => okId(r) && t.objectStore(n).put(r)));
+        (Array.isArray(data.meta) ? data.meta : []).forEach((m) => m && typeof m.key === 'string' && !KEEP_META.includes(m.key) && t.objectStore('meta').put(m));
       });
     },
 

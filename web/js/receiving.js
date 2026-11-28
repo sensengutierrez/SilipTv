@@ -40,7 +40,7 @@
       '<div class="stat"><div class="k">' + esc(t('Bilang ng delivery')) + '</div><div class="v">' + month.length + '</div></div>' +
       '<div class="stat"><div class="k">' + esc(t('Draft')) + '</div><div class="v">' + drafts + '</div></div>';
     $('#rcvList').innerHTML = list.length ? list.map((r) =>
-      '<button type="button" class="item" data-id="' + r.id + '"><span class="grow">' +
+      '<button type="button" class="item" data-id=\"' + escHtml(r.id) + '\"><span class="grow">' +
       '<div class="nm">RCV #' + (r.no || '–') + ' · ' + esc(r.supplier || t('Walang supplier')) + '</div>' +
       '<div class="meta">' + [r.invoiceNo ? t('Invoice') + ' ' + esc(r.invoiceNo) : '', esc(r.date || ''), t('{n} item', { n: r.lines.length })].filter(Boolean).join(' · ') + '</div></span>' +
       '<span class="right"><div class="pr">' + money(r.total) + '</div>' + badge(r) + '</span></button>').join('')

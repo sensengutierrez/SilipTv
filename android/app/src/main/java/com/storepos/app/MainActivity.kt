@@ -85,6 +85,7 @@ class MainActivity : ComponentActivity() {
             domStorageEnabled = true
             databaseEnabled = true
             allowFileAccess = false
+            allowContentAccess = false
             mediaPlaybackRequiresUserGesture = false
         }
         web.addJavascriptInterface(Bridge(this), "AndroidPOS")
@@ -95,7 +96,10 @@ class MainActivity : ComponentActivity() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val u = request.url
                 if (u.host == Uri.parse(origin).host) return false
-                try { startActivity(Intent(Intent.ACTION_VIEW, u)) } catch (_: Exception) {}
+                // Sa labas ng app binubuksan ang ibang link, at mga ligtas na scheme lang.
+                if (u.scheme?.lowercase() in setOf("https", "http", "mailto", "tel", "sms", "smsto", "whatsapp")) {
+                    try { startActivity(Intent(Intent.ACTION_VIEW, u)) } catch (_: Exception) {}
+                }
                 return true
             }
         }

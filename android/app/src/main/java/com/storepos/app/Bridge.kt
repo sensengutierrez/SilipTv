@@ -110,9 +110,12 @@ class Bridge(private val act: MainActivity) {
     /** Buksan ang link sa ibang app: https://wa.me/..., mailto:, tel:, sms: */
     @JavascriptInterface
     fun openUrl(url: String) {
+        val u = Uri.parse(url)
+        // Mga ligtas na link lang (web, email, tawag, SMS, WhatsApp); bawal ang intent:, file:, content: at iba pa.
+        if (u.scheme?.lowercase() !in setOf("https", "http", "mailto", "tel", "sms", "smsto", "whatsapp")) return
         act.runOnUiThread {
             try {
-                val i = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val i = Intent(Intent.ACTION_VIEW, u).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 act.startActivity(i)
             } catch (_: Exception) {
                 android.widget.Toast.makeText(act, "Walang app na makakabukas nito", android.widget.Toast.LENGTH_SHORT).show()
