@@ -5,6 +5,7 @@
  */
 (function () {
   'use strict';
+  const t = (k, v) => window.I18N.t(k, v);
   const A = window.AndroidPOS || null;
   let seq = 0;
 
@@ -26,14 +27,14 @@
   function cameraScan() {
     return new Promise((resolve, reject) => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        return reject(new Error('Walang camera access ang browser na ito (kailangan ng https).'));
+        return reject(new Error(t('Walang camera access ang browser na ito (kailangan ng https).')));
       }
       overlay = document.createElement('div');
       overlay.className = 'scan-overlay';
       overlay.innerHTML =
         '<video playsinline muted></video><div class="scan-frame"></div>' +
-        '<div class="scan-hint">Itapat ang barcode sa kahon</div>' +
-        '<button class="btn scan-close" type="button">Isara</button>';
+        '<div class="scan-hint">' + t('Itapat ang barcode sa kahon') + '</div>' +
+        '<button class="btn scan-close" type="button">' + t('Isara') + '</button>';
       document.body.appendChild(overlay);
       const video = overlay.querySelector('video');
       let stream = null, stopped = false, zx = null;
@@ -67,14 +68,14 @@
             setTimeout(tick, 120);
           };
           tick();
-        }).catch((e) => stop(null, new Error('Hindi mabuksan ang camera: ' + e.message)));
+        }).catch((e) => stop(null, new Error(t('Hindi mabuksan ang camera: ') + e.message)));
       } else if (window.ZXing) {
         zx = new window.ZXing.BrowserMultiFormatReader();
         zx.decodeFromConstraints(constraints, video, (res) => { if (res) stop(res.getText()); })
           .then(() => { stream = video.srcObject; })
-          .catch((e) => stop(null, new Error('Hindi mabuksan ang camera: ' + e.message)));
+          .catch((e) => stop(null, new Error(t('Hindi mabuksan ang camera: ') + e.message)));
       } else {
-        stop(null, new Error('Walang barcode scanner sa browser na ito.'));
+        stop(null, new Error(t('Walang barcode scanner sa browser na ito.')));
       }
     });
   }

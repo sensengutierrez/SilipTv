@@ -5,6 +5,7 @@
  */
 (function () {
   'use strict';
+  const t = (k, v) => window.I18N.t(k, v);
   const A = window.AndroidPOS || null;
 
   // Callback mula sa Android app
@@ -50,11 +51,11 @@
       try { chars = await s.getCharacteristics(); } catch (e) { continue; }
       for (const c of chars) if (c.properties.writeWithoutResponse || c.properties.write) return c;
     }
-    throw new Error('Walang mapag-print-an sa device na ito.');
+    throw new Error(t('Walang mapag-print-an sa device na ito.'));
   }
 
   async function bleConnect() {
-    if (!navigator.bluetooth) throw new Error('Walang Web Bluetooth ang browser na ito. Gamitin ang Chrome sa Android o computer, o ang Android app.');
+    if (!navigator.bluetooth) throw new Error(t('Walang Web Bluetooth ang browser na ito. Gamitin ang Chrome sa Android o computer, o ang Android app.'));
     const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: BLE_SERVICES });
     ble = { device, ch: await bleFindChar(device) };
     return { name: device.name || 'Bluetooth printer', id: device.id };
@@ -67,7 +68,7 @@
         const list = await navigator.bluetooth.getDevices();
         if (list.length) ble.device = list[0];
       }
-      if (!ble.device) throw new Error('Pumili muna ng printer sa Printer tab.');
+      if (!ble.device) throw new Error(t('Pumili muna ng printer sa Printer tab.'));
     }
     if (!ble.ch || !ble.device.gatt.connected) ble.ch = await bleFindChar(ble.device);
     const ch = ble.ch;
@@ -113,13 +114,13 @@
     /** Ipadala ang ESC/POS bytes sa napiling printer. */
     async sendBytes(cfg, bytes) {
       if (cfg.mode === 'bt') {
-        if (!A) throw new Error('Sa Android app lang ito. Sa website, piliin ang "Bluetooth (BLE)".');
-        if (!cfg.address) throw new Error('Pumili muna ng printer sa Printer tab.');
+        if (!A) throw new Error(t('Sa Android app lang ito. Sa website, piliin ang "Bluetooth (BLE)".'));
+        if (!cfg.address) throw new Error(t('Pumili muna ng printer sa Printer tab.'));
         await native('btPrint', cfg.address, toB64(bytes));
       } else if (cfg.mode === 'ble') {
         await bleWrite(bytes);
       } else {
-        throw new Error('Walang napiling Bluetooth printer.');
+        throw new Error(t('Walang napiling Bluetooth printer.'));
       }
     },
     printHtml,

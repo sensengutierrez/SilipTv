@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
     private val startUrl = "$origin/assets/www/index.html"
 
     private var fileCallback: ValueCallback<Array<Uri>>? = null
-    private var pendingSave: Pair<String, (String) -> Unit>? = null
+    private var pendingSave: Pair<ByteArray, (String) -> Unit>? = null
     private var pendingBt: ((Boolean) -> Unit)? = null
     private var pendingCam: PermissionRequest? = null
     private var printWeb: WebView? = null
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
         pendingSave = null
         if (uri == null) { p.second("cancel"); return@registerForActivityResult }
         try {
-            contentResolver.openOutputStream(uri, "wt")!!.use { it.write(p.first.toByteArray(Charsets.UTF_8)) }
+            contentResolver.openOutputStream(uri, "wt")!!.use { it.write(p.first) }
             p.second("ok")
         } catch (e: Exception) { p.second("error") }
     }
@@ -160,9 +160,9 @@ class MainActivity : ComponentActivity() {
     }
 
     // ---- I-save ang file (backup / CSV) kung saan gusto ng user ----
-    fun saveDocument(name: String, mime: String, text: String, done: (String) -> Unit) {
+    fun saveDocument(name: String, mime: String, data: ByteArray, done: (String) -> Unit) {
         pendingSave?.second?.invoke("cancel")
-        pendingSave = text to done
+        pendingSave = data to done
         saveMime = mime
         try { createDoc.launch(name) } catch (e: Exception) { pendingSave = null; done("error") }
     }

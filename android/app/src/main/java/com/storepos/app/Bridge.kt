@@ -90,7 +90,16 @@ class Bridge(private val act: MainActivity) {
     @JavascriptInterface
     fun saveFile(name: String, mime: String, text: String, id: String) {
         act.runOnUiThread {
-            act.saveDocument(name, mime, text) { result -> js("__posFile", id, result != "error", result) }
+            act.saveDocument(name, mime, text.toByteArray(Charsets.UTF_8)) { result -> js("__posFile", id, result != "error", result) }
+        }
+    }
+
+    /** Binary na file (hal. Excel .xlsx) bilang base64. */
+    @JavascriptInterface
+    fun saveFileB64(name: String, mime: String, b64: String, id: String) {
+        val bytes = try { Base64.decode(b64, Base64.DEFAULT) } catch (e: Exception) { js("__posFile", id, false, "error"); return }
+        act.runOnUiThread {
+            act.saveDocument(name, mime, bytes) { result -> js("__posFile", id, result != "error", result) }
         }
     }
 

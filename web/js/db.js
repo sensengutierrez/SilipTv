@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const DB_NAME = 'pos-db';
-  const VERSION = 1;
+  const VERSION = 2;
   let dbp = null;
 
   function open() {
@@ -20,6 +20,10 @@
           s.createIndex('time', 'time', { unique: false });
         }
         if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains('receivings')) {
+          const s = db.createObjectStore('receivings', { keyPath: 'id' });
+          s.createIndex('time', 'time', { unique: false });
+        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -89,9 +93,62 @@
       });
     },
 
+    /** Receiving (delivery mula sa supplier): idagdag ang stock, i-update ang puhunan (at presyo kung may bago),
+     *  gumawa ng bagong paninda kung wala pa. Lahat sa iisang transaction. */
+    postReceiving(rec) {
+      return tx(['receivings', 'products'], 'readwrite', async (t) => {
+        const ps = t.objectStore('products');
+        const now = Date.now();
+        for (const ln of rec.lines) {
+          let p = ln.productId ? await wrap(ps.get(ln.productId)) : null;
+          if (!p) {
+            p = {
+              id: ln.productId || (now.toString(36) + Math.random().toString(36).slice(2, 8)),
+              name: ln.name, barcode: ln.barcode || '', price: num(ln.price), cost: '', unit: ln.unit || 'piraso',
+              category: '', stock: 0, reorder: 0, created: now,
+            };
+            ln.productId = p.id;
+            ln.isNew = true;
+          }
+          ln.prevStock = num(p.stock);
+          ln.prevCost = p.cost;
+          ln.prevPrice = num(p.price);
+          p.stock = round(num(p.stock) + num(ln.qty));
+          if (ln.cost !== '' && ln.cost != null) p.cost = Math.round(num(ln.cost) * 100) / 100;
+          if (ln.price !== '' && ln.price != null && num(ln.price) > 0) p.price = Math.round(num(ln.price) * 100) / 100;
+          if (ln.barcode && !p.barcode) p.barcode = ln.barcode;
+          if (ln.unit && !p.unit) p.unit = ln.unit;
+          p.updated = now;
+          ps.put(p);
+        }
+        rec.status = 'posted';
+        rec.posted = now;
+        t.objectStore('receivings').put(rec);
+        return rec;
+      });
+    },
+
+    /** I-void ang receiving: bawasan ulit ang stock. Hindi binabalik ang lumang puhunan/presyo. */
+    voidReceiving(id) {
+      return tx(['receivings', 'products'], 'readwrite', async (t) => {
+        const rs = t.objectStore('receivings');
+        const rec = await wrap(rs.get(id));
+        if (!rec || rec.status !== 'posted') return rec;
+        const ps = t.objectStore('products');
+        for (const ln of rec.lines) {
+          const p = await wrap(ps.get(ln.productId));
+          if (p) { p.stock = round(num(p.stock) - num(ln.qty)); p.updated = Date.now(); ps.put(p); }
+        }
+        rec.status = 'void';
+        rec.voided = Date.now();
+        rs.put(rec);
+        return rec;
+      });
+    },
+
     async exportAll() {
-      const [products, sales, meta] = await Promise.all([DB.all('products'), DB.all('sales'), DB.all('meta')]);
-      return { app: 'pos', format: 1, exported: new Date().toISOString(), products, sales, meta };
+      const [products, sales, meta, receivings] = await Promise.all([DB.all('products'), DB.all('sales'), DB.all('meta'), DB.all('receivings')]);
+      return { app: 'pos', format: 2, exported: new Date().toISOString(), products, sales, receivings, meta };
     },
 
     /** Palitan lahat ng data mula sa backup. */
@@ -99,8 +156,9 @@
       if (!data || data.app !== 'pos' || !Array.isArray(data.products) || !Array.isArray(data.sales)) {
         return Promise.reject(new Error('Hindi ito backup file ng POS na ito.'));
       }
-      return tx(['products', 'sales', 'meta'], 'readwrite', (t) => {
-        ['products', 'sales', 'meta'].forEach((s) => t.objectStore(s).clear());
+      return tx(['products', 'sales', 'meta', 'receivings'], 'readwrite', (t) => {
+        ['products', 'sales', 'meta', 'receivings'].forEach((s) => t.objectStore(s).clear());
+        (data.receivings || []).forEach((r) => r && r.id && t.objectStore('receivings').put(r));
         data.products.forEach((p) => p && p.id && t.objectStore('products').put(p));
         data.sales.forEach((s) => s && s.id && t.objectStore('sales').put(s));
         (data.meta || []).forEach((m) => m && m.key && t.objectStore('meta').put(m));
@@ -108,8 +166,8 @@
     },
 
     clearAll() {
-      return tx(['products', 'sales', 'meta'], 'readwrite', (t) => {
-        ['products', 'sales', 'meta'].forEach((s) => t.objectStore(s).clear());
+      return tx(['products', 'sales', 'meta', 'receivings'], 'readwrite', (t) => {
+        ['products', 'sales', 'meta', 'receivings'].forEach((s) => t.objectStore(s).clear());
       });
     },
   };
