@@ -4,7 +4,7 @@ const VERSION = 'dev';
 const CACHE = 'pos-' + VERSION;
 const FILES = [
   './', 'index.html', 'css/app.css', 'js/i18n.js', 'js/i18n-dict.js', 'js/version.js', 'js/db.js', 'js/xlsx.js', 'js/escpos.js',
-  'js/receipt.js', 'js/printer.js', 'js/scanner.js', 'js/receiving.js', 'js/app.js',
+  'js/receipt.js', 'js/printer.js', 'js/scanner.js', 'js/receiving.js', 'js/share.js', 'js/customers.js', 'js/dashboard.js', 'js/app.js',
   'vendor/zxing.min.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 

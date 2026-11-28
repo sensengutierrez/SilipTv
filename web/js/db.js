@@ -2,7 +2,8 @@
 (function () {
   'use strict';
   const DB_NAME = 'pos-db';
-  const VERSION = 2;
+  const VERSION = 3;
+  const STORES = ['products', 'sales', 'meta', 'receivings', 'customers', 'payments'];
   let dbp = null;
 
   function open() {
@@ -24,6 +25,14 @@
           const s = db.createObjectStore('receivings', { keyPath: 'id' });
           s.createIndex('time', 'time', { unique: false });
         }
+        // v3: suki (customers), bayad sa utang, at benta kada suki
+        if (!db.objectStoreNames.contains('customers')) db.createObjectStore('customers', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('payments')) {
+          const s = db.createObjectStore('payments', { keyPath: 'id' });
+          s.createIndex('customerId', 'customerId', { unique: false });
+        }
+        const sales = req.transaction.objectStore('sales');
+        if (!sales.indexNames.contains('customerId')) sales.createIndex('customerId', 'customerId', { unique: false });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -146,9 +155,19 @@
       });
     },
 
+    /** Lahat ng benta at bayad ng isang suki. */
+    customerLedger(id) {
+      return tx(['sales', 'payments'], 'readonly', async (t) => {
+        const sales = await wrap(t.objectStore('sales').index('customerId').getAll(id));
+        const payments = await wrap(t.objectStore('payments').index('customerId').getAll(id));
+        return { sales, payments };
+      });
+    },
+
     async exportAll() {
-      const [products, sales, meta, receivings] = await Promise.all([DB.all('products'), DB.all('sales'), DB.all('meta'), DB.all('receivings')]);
-      return { app: 'pos', format: 2, exported: new Date().toISOString(), products, sales, receivings, meta };
+      const names = ['products', 'sales', 'meta', 'receivings', 'customers', 'payments'];
+      const [products, sales, meta, receivings, customers, payments] = await Promise.all(names.map((n) => DB.all(n)));
+      return { app: 'pos', format: 3, exported: new Date().toISOString(), products, sales, receivings, customers, payments, meta };
     },
 
     /** Palitan lahat ng data mula sa backup. */
@@ -156,9 +175,9 @@
       if (!data || data.app !== 'pos' || !Array.isArray(data.products) || !Array.isArray(data.sales)) {
         return Promise.reject(new Error('Hindi ito backup file ng POS na ito.'));
       }
-      return tx(['products', 'sales', 'meta', 'receivings'], 'readwrite', (t) => {
-        ['products', 'sales', 'meta', 'receivings'].forEach((s) => t.objectStore(s).clear());
-        (data.receivings || []).forEach((r) => r && r.id && t.objectStore('receivings').put(r));
+      return tx(STORES, 'readwrite', (t) => {
+        STORES.forEach((s) => t.objectStore(s).clear());
+        ['receivings', 'customers', 'payments'].forEach((n) => (data[n] || []).forEach((r) => r && r.id && t.objectStore(n).put(r)));
         data.products.forEach((p) => p && p.id && t.objectStore('products').put(p));
         data.sales.forEach((s) => s && s.id && t.objectStore('sales').put(s));
         (data.meta || []).forEach((m) => m && m.key && t.objectStore('meta').put(m));
@@ -166,8 +185,8 @@
     },
 
     clearAll() {
-      return tx(['products', 'sales', 'meta', 'receivings'], 'readwrite', (t) => {
-        ['products', 'sales', 'meta', 'receivings'].forEach((s) => t.objectStore(s).clear());
+      return tx(STORES, 'readwrite', (t) => {
+        STORES.forEach((s) => t.objectStore(s).clear());
       });
     },
   };

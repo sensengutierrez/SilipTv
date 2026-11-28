@@ -1,4 +1,4 @@
-/* POS: cashier, paninda, receiving, benta, printer, backup. Lahat ng data ay nasa device (IndexedDB). */
+/* POS: cashier, paninda, receiving, suki, dashboard, printer, backup. Lahat ng data ay nasa device (IndexedDB). */
 (function () {
   'use strict';
   const A = window.AndroidPOS || null;
@@ -23,6 +23,8 @@
     invGrid: false,
     salesRange: 'today',
     salesDay: null,
+    customer: null,
+    method: 'cash',
   };
 
   // ---------- helpers ----------
@@ -181,11 +183,12 @@
   // ---------- tabs ----------
   const currentView = () => (($('.view.on') || {}).id || 'view-cashier').replace('view-', '');
   function show(view) {
-    $$('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.view === view));
+    $$('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.view === view || b.dataset.also === view));
     $$('.view').forEach((v) => v.classList.toggle('on', v.id === 'view-' + view));
     if (view === 'cashier') renderCashier();
     if (view === 'inventory') renderInventory();
     if (view === 'receiving') Receiving.render();
+    if (view === 'customers') Customers.render();
     if (view === 'sales') renderSales();
     if (view === 'printer') renderPrinter();
     if (view === 'backup') renderBackup();
@@ -302,12 +305,45 @@
     $$('#cashChips .chip').forEach((b) => b.addEventListener('click', () => { $('#cash').value = b.dataset.v; updateChange(); }));
   }
 
+  function renderCustomerBtn() {
+    const c = S.customer;
+    const b = $('#custBtn');
+    b.classList.toggle('on', !!c);
+    b.innerHTML = '<span class="avatar sm">' + (c ? esc(Customers.initials(c.name)) : '👤') + '</span><span class="grow">' +
+      (c ? '<b>' + esc(c.name) + '</b>' + (c._bal > 0 ? ' <span class="badge low">' + esc(t('Utang')) + ' ' + money(c._bal) + '</span>' : '')
+        : esc(t('Walk-in · pindutin para pumili ng suki'))) + '</span>' + (c ? '<span class="x" data-clear>×</span>' : '');
+  }
+
+  async function setCustomer(c) {
+    S.customer = c ? { ...c, _bal: await Customers.balance(c.id) } : null;
+    if (!c && S.method === 'utang') S.method = 'cash';
+    renderCustomerBtn();
+    renderMethod();
+  }
+
+  function renderMethod() {
+    $$('#payMethod button').forEach((b) => b.classList.toggle('on', b.dataset.m === S.method));
+    const utang = S.method === 'utang';
+    $('#cashLabel').textContent = utang ? t('Paunang bayad (puwedeng 0)') : S.method === 'cash' ? t('Bayad (cash)') : t('Halagang ibinayad');
+    $('#cashChips').hidden = utang;
+    updateChange();
+  }
+
   function updateChange() {
     const { total } = cartTotals();
     const cashStr = $('#cash').value.trim();
     const cash = num(cashStr);
     const row = $('.pay .change');
     row.classList.remove('ok', 'short');
+    const utang = S.method === 'utang';
+    $('.pay .change span').textContent = utang ? t('Iuutang') : t('Sukli');
+    if (utang) {
+      $('#change').textContent = S.cart.length ? money(Math.max(0, total - cash)) : '—';
+      if (S.cart.length) row.classList.add('short');
+      $('#payBtn').disabled = !(S.cart.length > 0 && S.customer && cash <= total);
+      $('#payBtn').textContent = S.customer ? t('I-utang') : t('Pumili muna ng suki');
+      return;
+    }
     if (!cashStr || !S.cart.length) {
       $('#change').textContent = '—';
     } else if (cash < total) {
@@ -328,14 +364,20 @@
       : p.mode === 'system' ? t('Printer: ordinaryong print') : t('Hindi magpi-print ng resibo');
   }
 
-  function renderCashier() { renderQuick(); renderCart(); renderPrinterLine(); }
+  function renderCashier() { renderQuick(); renderCart(); renderPrinterLine(); renderCustomerBtn(); renderMethod(); }
 
   async function pay() {
     if (!S.cart.length) return;
     const tt = cartTotals();
     const cashStr = $('#cash').value.trim();
-    const cash = cashStr === '' ? tt.total : num(cashStr);
-    if (cash < tt.total) { toast(t('Kulang ang bayad'), true); return; }
+    const utang = S.method === 'utang';
+    const cust = S.customer;
+    if (utang && !cust) { toast(t('Pumili muna ng suki para sa utang'), true); return; }
+    const cash = utang ? Math.min(num(cashStr), tt.total) : (cashStr === '' ? tt.total : num(cashStr));
+    if (!utang && cash < tt.total) { toast(t('Kulang ang bayad'), true); return; }
+    if (utang && cust.limit !== '' && cust.limit != null && cust._bal + (tt.total - cash) > num(cust.limit)) {
+      if (!(await confirmBox(t('Lampas sa limit ng utang'), t('{n}: magiging {x} ang utang (limit {l}). Ituloy pa rin?', { n: cust.name, x: money(cust._bal + tt.total - cash), l: money(cust.limit) }), t('Ituloy')))) return;
+    }
     $('#payBtn').disabled = true;
     try {
       const no = (await DB.getMeta('seq', 0)) + 1;
@@ -344,16 +386,24 @@
         id: uid(), no, time: Date.now(),
         items: S.cart.map((l) => ({ ...l })),
         subtotal: tt.subtotal, discount: tt.discount, total: tt.total,
-        cash: r2(cash), change: r2(cash - tt.total),
+        method: S.method,
+        cash: r2(cash), change: utang ? 0 : r2(cash - tt.total),
+        credit: utang ? r2(tt.total - cash) : 0,
         cashier: S.store.cashier || '',
       };
+      if (cust) {
+        sale.customerId = cust.id; sale.customerName = cust.name;
+        if (utang) sale.balanceAfter = r2(cust._bal + sale.credit);
+      }
       await DB.saveSale(sale);
       sale.items.forEach((l) => { S.soldCount[l.productId] = r3((S.soldCount[l.productId] || 0) + l.qty); });
       await DB.setMeta('soldCount', S.soldCount);
       await reloadProducts();
       S.cart = []; S.discount = 0; $('#cash').value = '';
+      S.method = 'cash';
+      await setCustomer(null);
       renderCashier();
-      saleDone(sale);
+      saleDone(sale, cust);
       if (S.printer.mode !== 'none' && S.printer.auto) printSale(sale);
     } catch (e) {
       toast(t('Hindi na-save: {e}', { e: e.message }), true);
@@ -362,14 +412,17 @@
     }
   }
 
-  function saleDone(sale) {
+  function saleDone(sale, cust) {
+    const utang = sale.method === 'utang';
     modal(
-      '<div class="done-big"><div class="k">' + esc(t('Sukli')) + '</div><div class="v">' + money(sale.change) + '</div>' +
-      '<p class="muted">' + esc(t('Total {a} · Bayad {b} · Resibo #{n}', { a: money(sale.total), b: money(sale.cash), n: sale.no })) + '</p></div>' +
-      '<div class="modal-actions">' +
-      (S.printer.mode !== 'none' ? '<button class="btn ghost" id="sdPrint" type="button">' + esc(S.printer.auto ? t('Print ulit') : t('Print resibo')) + '</button>' : '') +
-      '<button class="btn primary" data-close type="button">' + esc(t('Bagong benta')) + '</button></div>',
-      (m) => { const pb = $('#sdPrint', m); if (pb) pb.onclick = () => printSale(sale); }
+      '<div class="done-big' + (utang ? ' credit' : '') + '"><div class="k">' + esc(utang ? t('Na-utang ni {n}', { n: sale.customerName }) : t('Sukli')) + '</div>' +
+      '<div class="v">' + money(utang ? sale.credit : sale.change) + '</div>' +
+      '<p class="muted">' + esc(t('Total {a} · Bayad {b} · Resibo #{n}', { a: money(sale.total), b: money(sale.cash), n: sale.no })) +
+      (utang ? '<br>' + esc(t('Kabuuang balanse')) + ': <b>' + money(sale.balanceAfter) + '</b>' : '') + '</p></div>' +
+      '<p class="send-label">' + esc(t('Ipadala o i-print ang resibo')) + (sale.customerName ? ' · ' + esc(sale.customerName) : '') + '</p>' +
+      '<div class="send-grid">' + Customers.sendButtons(cust) + '</div>' +
+      '<div class="modal-actions"><button class="btn primary big" data-close type="button">' + esc(t('Bagong benta')) + '</button></div>',
+      (m) => Customers.bindSend(m, saleDoc(sale), cust, t('Resibo #{n}', { n: sale.no }), 'resibo-' + sale.no)
     );
   }
 
@@ -617,6 +670,7 @@
       case 'yesterday': return [start.getTime() - day, start.getTime(), 'kahapon'];
       case 'week': return [start.getTime() - 6 * day, start.getTime() + day, '7-araw'];
       case 'month': return [new Date(now.getFullYear(), now.getMonth(), 1).getTime(), start.getTime() + day, dayKey(now).slice(0, 7)];
+      case '30': return [start.getTime() - 29 * day, start.getTime() + day, '30-araw'];
       case 'day': {
         const [y, mo, d] = S.salesDay.split('-').map(Number);
         const s = new Date(y, mo - 1, d).getTime();
@@ -626,34 +680,31 @@
     }
   }
 
-  async function salesInRange() {
+  async function salesInRange(withPrev) {
     const [from, to] = rangeBounds();
     const all = await DB.all('sales');
-    return all.filter((s) => s.time >= from && s.time < to).sort((a, b) => b.time - a.time);
+    const list = all.filter((s) => s.time >= from && s.time < to).sort((a, b) => b.time - a.time);
+    if (!withPrev) return list;
+    const len = to - from;
+    let pf = from - len, pt = from;
+    if (S.salesRange === 'month') { const d = new Date(from); pf = new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime(); pt = pf + (Date.now() - from); }
+    if (S.salesRange === 'today') pt = from - len + (Date.now() - from); // kahapon hanggang parehong oras
+    return { list, prev: all.filter((s) => s.time >= pf && s.time < pt), from, to };
   }
 
-  async function renderSales() {
+  async function renderSales(showAll) {
     $$('#salesRange .chip[data-r]').forEach((c) => c.classList.toggle('on', c.dataset.r === S.salesRange));
     $('.date-chip').classList.toggle('on', S.salesRange === 'day');
-    const sales = await salesInRange();
+    const rs = await salesInRange(true);
+    const sales = rs.list;
     const valid = sales.filter((s) => !s.voided);
-    const total = valid.reduce((s, x) => s + x.total, 0);
-    let cost = 0, hasCost = true;
+    await Dashboard.render({ sales, prevSales: rs.prev, from: rs.from, to: rs.to, range: S.salesRange });
     const top = {};
     valid.forEach((s) => s.items.forEach((it) => {
-      if (it.cost === '' || it.cost == null) hasCost = false;
-      cost += num(it.cost) * it.qty;
       const k = it.productId;
       top[k] = top[k] || { name: it.name, qty: 0, amt: 0, unit: it.unit };
       top[k].qty += it.qty; top[k].amt += it.price * it.qty;
     }));
-    const discounts = valid.reduce((s, x) => s + (x.discount || 0), 0);
-    $('#salesStats').innerHTML =
-      '<div class="stat main"><div class="k">' + esc(t('Kabuuang benta')) + '</div><div class="v">' + money(total) + '</div></div>' +
-      '<div class="stat"><div class="k">' + esc(t('Bilang ng resibo')) + '</div><div class="v">' + valid.length + '</div></div>' +
-      '<div class="stat"><div class="k">' + esc(t('Tubo')) + (hasCost ? '' : ' (' + esc(t('may kulang na puhunan')) + ')') + '</div><div class="v">' + money(total - cost) + '</div></div>' +
-      '<div class="stat"><div class="k">' + esc(t('Average kada resibo')) + '</div><div class="v">' + money(valid.length ? total / valid.length : 0) + '</div></div>' +
-      (discounts ? '<div class="stat"><div class="k">' + esc(t('Discount')) + '</div><div class="v">' + money(discounts) + '</div></div>' : '');
     const tops = Object.values(top).sort((a, b) => b.amt - a.amt).slice(0, 10);
     const maxAmt = tops.length ? tops[0].amt : 1;
     $('#topItems').innerHTML = tops.length ? tops.map((x) =>
@@ -661,27 +712,32 @@
       '<div class="bar"><i style="width:' + Math.max(3, (x.amt / maxAmt) * 100) + '%"></i></div></div>').join('')
       : '<p class="muted">' + esc(t('Wala pang benta.')) + '</p>';
     const short = ['today', 'yesterday', 'day'].includes(S.salesRange);
-    $('#salesList').innerHTML = sales.length ? sales.map((s) =>
+    const shown = showAll === true ? sales : sales.slice(0, 25);
+    $('#salesList').innerHTML = (sales.length ? shown.map((s) =>
       '<button type="button" class="item" data-id="' + s.id + '"><span class="grow">' +
       '<div class="nm">#' + s.no + ' · ' + esc(short ? fmtTime(s.time) : fmtDateTime(s.time)) + '</div>' +
-      '<div class="meta">' + esc(s.items.map((i) => i.name).join(', ').slice(0, 80)) + '</div></span>' +
-      '<span class="right"><div class="pr">' + money(s.total) + '</div>' + (s.voided ? '<span class="badge void">VOID</span>' : '') + '</span></button>').join('')
-      : '<p class="muted">' + esc(t('Walang resibo sa panahong ito.')) + '</p>';
+      '<div class="meta">' + (s.customerName ? '👤 ' + esc(s.customerName) + ' · ' : '') + esc(s.items.map((i) => i.name).join(', ').slice(0, 80)) + '</div></span>' +
+      '<span class="right"><div class="pr">' + money(s.total) + '</div>' + (s.voided ? '<span class="badge void">VOID</span>'
+        : s.credit ? '<span class="badge low">' + esc(t('Utang')) + '</span>' : s.method && s.method !== 'cash' ? '<span class="meta">' + esc(Receipt.METHOD_LABEL(s.method)) + '</span>' : '') + '</span></button>').join('')
+      : '<p class="muted">' + esc(t('Walang resibo sa panahong ito.')) + '</p>') +
+      (shown.length < sales.length ? '<button class="btn ghost" id="salesMore" type="button">' + esc(t('Ipakita lahat ({n})', { n: sales.length })) + '</button>' : '');
     $$('#salesList .item').forEach((b) => b.addEventListener('click', async () => viewSale(await DB.get('sales', b.dataset.id))));
+    const more = $('#salesMore');
+    if (more) more.onclick = () => renderSales(true);
   }
 
-  function viewSale(sale) {
+  async function viewSale(sale) {
     if (!sale) return;
+    const cust = sale.customerId ? await DB.get('customers', sale.customerId) : null;
     modal(
       Receipt.toHtml(saleDoc(sale)) +
+      '<div class="send-grid" style="margin-top:12px">' + Customers.sendButtons(cust) + '</div>' +
       '<div class="modal-actions">' +
       (sale.voided ? '' : '<button class="btn danger" id="vsVoid" type="button">' + esc(t('Void')) + '</button>') +
-      (S.printer.mode !== 'none' ? '<button class="btn ghost" id="vsPrint" type="button">' + esc(t('Print ulit')) + '</button>' : '') +
       '<button class="btn primary" data-close type="button">' + esc(t('Isara')) + '</button></div>' +
       (sale.voided ? '<p class="muted" style="text-align:center;margin-top:10px">' + esc(t('Na-void noong {d}', { d: fmtDateTime(sale.voided) })) + '</p>' : ''),
       (m, close) => {
-        const pb = $('#vsPrint', m);
-        if (pb) pb.onclick = () => printSale(sale);
+        Customers.bindSend(m, saleDoc(sale), cust, t('Resibo #{n}', { n: sale.no }), 'resibo-' + sale.no);
         const vb = $('#vsVoid', m);
         if (vb) vb.onclick = async () => {
           if (!(await confirmBox(t('I-void ang resibo #{n}?', { n: sale.no }), t('Hindi na ito bibilangin sa benta at ibabalik ang stock ng mga paninda.'), t('I-void'), true))) return;
@@ -689,7 +745,8 @@
           sale.items.forEach((l) => { S.soldCount[l.productId] = Math.max(0, r3((S.soldCount[l.productId] || 0) - l.qty)); });
           await DB.setMeta('soldCount', S.soldCount);
           await reloadProducts();
-          close(); renderSales(); toast(t('Na-void ang #{n}', { n: sale.no }));
+          close(); if (currentView() === 'sales') renderSales(); if (currentView() === 'customers') Customers.render();
+          toast(t('Na-void ang #{n}', { n: sale.no }));
         };
       }
     );
@@ -843,8 +900,8 @@
     let data;
     try { data = JSON.parse(text); } catch (e) { toast(t('Sira o hindi tamang file'), true); return; }
     if (!data || data.app !== 'pos') { toast(t('Hindi ito backup file ng POS na ito'), true); return; }
-    const msg = t('{p} paninda, {s} benta at {r} receiving mula {d}. Papalitan nito ang lahat ng data ngayon.', {
-      p: (data.products || []).length, s: (data.sales || []).length, r: (data.receivings || []).length,
+    const msg = t('{p} paninda, {s} benta, {r} receiving at {c} suki mula {d}. Papalitan nito ang lahat ng data ngayon.', {
+      p: (data.products || []).length, s: (data.sales || []).length, r: (data.receivings || []).length, c: (data.customers || []).length,
       d: data.exported ? fmtDateTime(data.exported) : 'backup',
     });
     if (!(await confirmBox(t('Ibalik ang backup?'), msg, t('Ibalik'), true))) return;
@@ -1085,6 +1142,19 @@
     $('#cash').addEventListener('input', updateChange);
     $('#cash').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !$('#payBtn').disabled) pay(); });
     $('#payBtn').onclick = pay;
+    $('#custBtn').onclick = async (e) => {
+      if (e.target.closest('[data-clear]')) { await setCustomer(null); return; }
+      const c = await Customers.pick(S.customer && S.customer.id);
+      if (c !== undefined) await setCustomer(c);
+    };
+    $$('#payMethod button').forEach((b) => b.addEventListener('click', async () => {
+      S.method = b.dataset.m;
+      if (S.method === 'utang' && !S.customer) {
+        const c = await Customers.pick(null);
+        if (c) await setCustomer(c); else S.method = 'cash';
+      }
+      renderMethod();
+    }));
     $('#discBtn').onclick = async () => {
       if (!S.cart.length) { toast(t('Wala pang laman ang cart')); return; }
       const { subtotal } = cartTotals();
@@ -1100,8 +1170,12 @@
     $$('#invFilters .chip[data-f]').forEach((c) => c.addEventListener('click', () => { S.invFilter = c.dataset.f; renderInventory(); }));
     $('#invGridBtn').onclick = () => { S.invGrid = !S.invGrid; renderInventory(); };
 
-    // Receiving
+    // Receiving at Suki
     Receiving.bind();
+    Customers.bind();
+    $$('.subnav [data-go]').forEach((b) => b.addEventListener('click', () => show(b.dataset.go)));
+    $('#dashLowBtn').onclick = () => { S.invFilter = 'low'; show('inventory'); };
+    $('#dashDebtBtn').onclick = () => show('customers');
 
     // Benta
     $$('#salesRange .chip[data-r]').forEach((c) => c.addEventListener('click', () => { S.salesRange = c.dataset.r; $('#salesDate').value = ''; renderSales(); }));
@@ -1199,7 +1273,7 @@
   // Para sa ibang module (Receiving)
   window.POSKIT = {
     S, $, $$, t, esc, num, r2, r3, money, qtyStr, uid, dayKey, fmtDateTime, toast, modal, confirmBox, promptText, promptArea,
-    byId, byBarcode, reloadProducts, receiptDoc, saveBlob,
+    byId, byBarcode, reloadProducts, receiptDoc, saveBlob, pad, locale, viewSale, printDoc,
   };
 
   async function start() {

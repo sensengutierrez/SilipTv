@@ -1159,5 +1159,373 @@ window.I18N_DICT = {
 "tasa": {
 "en": "cup",
 "ar": "كوب"
+},
+"Utang": {
+"en": "Credit",
+"ar": "آجل"
+},
+"Walk-in · pindutin para pumili ng suki": {
+"en": "Walk-in · tap to choose a customer",
+"ar": "عميل عابر · اضغط لاختيار عميل"
+},
+"Paunang bayad (puwedeng 0)": {
+"en": "Down payment (can be 0)",
+"ar": "دفعة مقدمة (يمكن أن تكون 0)"
+},
+"Halagang ibinayad": {
+"en": "Amount paid",
+"ar": "المبلغ المدفوع"
+},
+"Iuutang": {
+"en": "On credit",
+"ar": "على الحساب"
+},
+"I-utang": {
+"en": "Charge to account",
+"ar": "تسجيل على الحساب"
+},
+"Pumili muna ng suki": {
+"en": "Choose a customer first",
+"ar": "اختر عميلاً أولاً"
+},
+"Pumili muna ng suki para sa utang": {
+"en": "Choose a customer for credit sales",
+"ar": "اختر عميلاً للبيع الآجل"
+},
+"Lampas sa limit ng utang": {
+"en": "Over credit limit",
+"ar": "تجاوز حد الائتمان"
+},
+"{n}: magiging {x} ang utang (limit {l}). Ituloy pa rin?": {
+"en": "{n}: balance will be {x} (limit {l}). Continue anyway?",
+"ar": "{n}: سيصبح الرصيد {x} (الحد {l}). هل تريد المتابعة؟"
+},
+"Ituloy": {
+"en": "Continue",
+"ar": "متابعة"
+},
+"Na-utang ni {n}": {
+"en": "Charged to {n}",
+"ar": "مسجل على حساب {n}"
+},
+"Kabuuang balanse": {
+"en": "Total balance",
+"ar": "إجمالي الرصيد"
+},
+"Ipadala o i-print ang resibo": {
+"en": "Send or print the receipt",
+"ar": "أرسل الإيصال أو اطبعه"
+},
+"Ipakita lahat ({n})": {
+"en": "Show all ({n})",
+"ar": "عرض الكل ({n})"
+},
+"{p} paninda, {s} benta, {r} receiving at {c} suki mula {d}. Papalitan nito ang lahat ng data ngayon.": {
+"en": "{p} products, {s} sales, {r} receivings and {c} customers from {d}. This replaces all current data.",
+"ar": "{p} منتج و{s} مبيعات و{r} استلام و{c} عميل من {d}. سيستبدل هذا كل البيانات الحالية."
+},
+"Bilang ng suki": {
+"en": "Customers",
+"ar": "عدد العملاء"
+},
+"Kabuuang utang": {
+"en": "Total credit",
+"ar": "إجمالي الديون"
+},
+"May utang": {
+"en": "With balance",
+"ar": "عليهم ديون"
+},
+"Wala pang suki": {
+"en": "No customers yet",
+"ar": "لا يوجد عملاء بعد"
+},
+"Magdagdag ng suki para ma-record ang utang, mapadalhan ng resibo sa WhatsApp o email, at makita ang history ng bili nila.": {
+"en": "Add customers to track credit, send receipts by WhatsApp or email, and see their purchase history.",
+"ar": "أضف العملاء لتسجيل الديون وإرسال الإيصالات عبر واتساب أو البريد ومعرفة سجل مشترياتهم."
+},
+"Walang contact": {
+"en": "No contact",
+"ar": "لا توجد جهة اتصال"
+},
+"Huli: {d}": {
+"en": "Last: {d}",
+"ar": "آخر: {d}"
+},
+"Sobra": {
+"en": "Overpaid",
+"ar": "زيادة"
+},
+"Bagong suki": {
+"en": "New customer",
+"ar": "عميل جديد"
+},
+"I-edit ang suki": {
+"en": "Edit customer",
+"ar": "تعديل العميل"
+},
+"Mobile / WhatsApp": {
+"en": "Mobile / WhatsApp",
+"ar": "الجوال / واتساب"
+},
+"Para sa labas ng Pilipinas, ilagay ang country code, hal. +973 3xxx xxxx.": {
+"en": "Outside the Philippines, include the country code, e.g. +973 3xxx xxxx.",
+"ar": "خارج الفلبين أضف رمز الدولة، مثل ‎+973 3xxx xxxx."
+},
+"Limit ng utang (puwedeng wala)": {
+"en": "Credit limit (optional)",
+"ar": "حد الائتمان (اختياري)"
+},
+"Tala (puwedeng wala)": {
+"en": "Note (optional)",
+"ar": "ملاحظة (اختياري)"
+},
+"Hi {n}! Paalala lang po mula sa {s}: ang balanse ninyo ay {b}. Salamat po!": {
+"en": "Hi {n}! A friendly reminder from {s}: your balance is {b}. Thank you!",
+"ar": "مرحباً {n}! تذكير من {s}: رصيدك المستحق {b}. شكراً لك!"
+},
+"Bayad sa utang": {
+"en": "Credit payment",
+"ar": "سداد دين"
+},
+"Wala pang bili.": {
+"en": "No purchases yet.",
+"ar": "لا توجد مشتريات بعد."
+},
+"Sobrang bayad": {
+"en": "Overpaid",
+"ar": "مبلغ زائد"
+},
+"Balanse (utang)": {
+"en": "Balance due",
+"ar": "الرصيد المستحق"
+},
+"Kabuuang bili": {
+"en": "Total purchases",
+"ar": "إجمالي المشتريات"
+},
+"Bilang ng bili": {
+"en": "Purchases",
+"ar": "عدد المشتريات"
+},
+"Lampas na sa limit ng utang ({x})": {
+"en": "Over credit limit ({x})",
+"ar": "تجاوز حد الائتمان ({x})"
+},
+"Tumanggap ng bayad": {
+"en": "Receive payment",
+"ar": "استلام دفعة"
+},
+"Tawagan": {
+"en": "Call",
+"ar": "اتصال"
+},
+"History": {
+"en": "History",
+"ar": "السجل"
+},
+"I-edit": {
+"en": "Edit",
+"ar": "تعديل"
+},
+"Hi {n}!": {
+"en": "Hi {n}!",
+"ar": "مرحباً {n}!"
+},
+"May utang pa siyang {x}. Mawawala ang record ng suki pero mananatili ang mga benta.": {
+"en": "They still owe {x}. The customer record will be removed but sales stay.",
+"ar": "لا يزال عليه {x}. سيُحذف سجل العميل لكن تبقى المبيعات."
+},
+"Mananatili ang mga benta sa Dashboard.": {
+"en": "Sales will stay in the Dashboard.",
+"ar": "ستبقى المبيعات في لوحة التحكم."
+},
+"Burahin si {x}?": {
+"en": "Delete {x}?",
+"ar": "حذف {x}؟"
+},
+"Balanse": {
+"en": "Balance",
+"ar": "الرصيد"
+},
+"I-save ang bayad": {
+"en": "Save payment",
+"ar": "حفظ الدفعة"
+},
+"Ilagay ang halaga": {
+"en": "Enter the amount",
+"ar": "أدخل المبلغ"
+},
+"Na-record ang bayad na {x}": {
+"en": "Payment of {x} recorded",
+"ar": "تم تسجيل دفعة {x}"
+},
+"I-void ang bayad?": {
+"en": "Void this payment?",
+"ar": "إلغاء هذه الدفعة؟"
+},
+"Ibabalik sa utang ang halagang ito.": {
+"en": "This amount will be added back to the balance.",
+"ar": "سيُضاف هذا المبلغ إلى الرصيد مجدداً."
+},
+"Na-void": {
+"en": "Voided",
+"ar": "تم الإلغاء"
+},
+"Print": {
+"en": "Print",
+"ar": "طباعة"
+},
+"I-share (larawan)": {
+"en": "Share (image)",
+"ar": "مشاركة (صورة)"
+},
+"WhatsApp number (puwedeng blangko para pumili sa WhatsApp)": {
+"en": "WhatsApp number (leave blank to choose in WhatsApp)",
+"ar": "رقم واتساب (اتركه فارغاً للاختيار من واتساب)"
+},
+"Email ng customer (puwedeng blangko)": {
+"en": "Customer email (can be blank)",
+"ar": "بريد العميل (يمكن تركه فارغاً)"
+},
+"Na-save ang larawan ng resibo": {
+"en": "Receipt image saved",
+"ar": "تم حفظ صورة الإيصال"
+},
+"Piliin ang suki": {
+"en": "Choose customer",
+"ar": "اختر العميل"
+},
+"Hanapin ang pangalan o numero": {
+"en": "Search name or number",
+"ar": "ابحث بالاسم أو الرقم"
+},
+"+ Bago": {
+"en": "+ New",
+"ar": "+ جديد"
+},
+"Walk-in (walang suki)": {
+"en": "Walk-in (no customer)",
+"ar": "عميل عابر (بدون عميل)"
+},
+"Wala pang suki. Pindutin ang \"+ Bago\".": {
+"en": "No customers yet. Tap \"+ New\".",
+"ar": "لا يوجد عملاء بعد. اضغط \"+ جديد\"."
+},
+"resibo": {
+"en": "receipts",
+"ar": "إيصالات"
+},
+"Benta at tubo": {
+"en": "Sales and profit",
+"ar": "المبيعات والأرباح"
+},
+"kumpara sa nakaraan": {
+"en": "vs previous",
+"ar": "مقارنة بالسابق"
+},
+"Margin": {
+"en": "Margin",
+"ar": "هامش الربح"
+},
+"Utang ng mga suki": {
+"en": "Customer credit",
+"ar": "ديون العملاء"
+},
+"+{x} sa panahong ito": {
+"en": "+{x} in this period",
+"ar": "+{x} في هذه الفترة"
+},
+"Wala pang benta sa panahong ito.": {
+"en": "No sales in this period yet.",
+"ar": "لا توجد مبيعات في هذه الفترة."
+},
+"at {n} pa": {
+"en": "and {n} more",
+"ar": "و{n} أخرى"
+},
+"Walang paubos na paninda.": {
+"en": "No low-stock products.",
+"ar": "لا توجد منتجات منخفضة المخزون."
+},
+"Walang may utang.": {
+"en": "No one owes anything.",
+"ar": "لا توجد ديون."
+},
+"Pinakamabentang oras: {h}:00 ({x})": {
+"en": "Best hour: {h}:00 ({x})",
+"ar": "أفضل ساعة: {h}:00 ({x})"
+},
+"Pinakamabentang araw: {d} ({x})": {
+"en": "Best day: {d} ({x})",
+"ar": "أفضل يوم: {d} ({x})"
+},
+"Suki": {
+"en": "Customers",
+"ar": "العملاء"
+},
+"Paunang bayad": {
+"en": "Down payment",
+"ar": "دفعة مقدمة"
+},
+"GCash / e-wallet": {
+"en": "GCash / e-wallet",
+"ar": "محفظة إلكترونية"
+},
+"Card": {
+"en": "Card",
+"ar": "بطاقة"
+},
+"BAYAD SA UTANG": {
+"en": "CREDIT PAYMENT",
+"ar": "سداد دين"
+},
+"Paraan": {
+"en": "Method",
+"ar": "الطريقة"
+},
+"Natitirang balanse": {
+"en": "Remaining balance",
+"ar": "الرصيد المتبقي"
+},
+"Salamat po!": {
+"en": "Thank you!",
+"ar": "شكراً لك!"
+},
+"Iba pa": {
+"en": "More",
+"ar": "المزيد"
+},
+"+ Bagong suki": {
+"en": "+ New customer",
+"ar": "+ عميل جديد"
+},
+"Bagong bili": {
+"en": "Recent",
+"ar": "الأحدث"
+},
+"30 araw": {
+"en": "30 days",
+"ar": "30 يوماً"
+},
+"* May paninda na walang puhunan; hindi ito binilang na tubo.": {
+"en": "* Some products have no cost set; they are not counted as profit.",
+"ar": "* بعض المنتجات بلا تكلفة؛ لم تُحتسب كربح."
+},
+"Paraan ng bayad": {
+"en": "Payment methods",
+"ar": "طرق الدفع"
+},
+"Tingnan": {
+"en": "View",
+"ar": "عرض"
+},
+"Lahat ng suki": {
+"en": "All customers",
+"ar": "كل العملاء"
+},
+"Hanapin ang suki": {
+"en": "Search customers",
+"ar": "ابحث عن عميل"
 }
 };
