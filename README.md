@@ -31,11 +31,27 @@ Tagalog, English at العربية (Arabic, right-to-left). Palitan sa 🌐 sa i
 - **APK**: tuwing may push sa `main`, gagawa ang GitHub ng bagong `POS.apk` (release `pos-vN`). Pagbukas ng app, lalabas ang "May bagong update"; pindutin ang **I-update**. Hindi nawawala ang data.
 - **Website**: kusang naa-update; lalabas ang "May bagong bersyon" at **I-reload**.
 
+## Cloud at API para sa AI agents (opsyonal)
+
+Sa **Iba pa → Backup → Cloud at API para sa AI** (admin lang):
+
+1. **Ikonekta sa cloud**: ipinapadala ang benta, paninda, suki, bayad sa utang, receiving at shift. Kusang nagsi-sync ilang segundo pagkatapos ng bawat pagbabago, pagbukas ng app at kada 5 minuto. Hindi ipinapadala ang staff at PIN, at hindi kasama ang token sa backup file.
+2. **+ Gumawa ng API key** para sa bawat AI. Isang beses lang ipinapakita ang key; puwedeng **Bawiin** anumang oras.
+3. Ikonekta ang AI (read-only):
+   - **Claude**: Settings → Connectors → Add custom connector → MCP URL (`…/functions/v1/pos/mcp?key=tpos_…`).
+   - **ChatGPT**: connector na may MCP URL (Developer mode), o Custom GPT → Actions → import `…/functions/v1/pos/api/openapi.json`, Auth: API key (Bearer).
+   - **Gemini / Grok / iba pa**: MCP URL, o REST na may `Authorization: Bearer tpos_…`.
+
+Mga MCP tool: `get_store`, `get_sales_summary`, `list_products`, `list_sales`, `list_customers`, `list_shifts`. REST: `/api/store`, `/api/summary?from=&to=`, `/api/products?low=1`, `/api/sales`, `/api/customers?debt=1`, `/api/shifts`.
+
+Ang server ay isang Supabase Edge Function (`supabase/functions/pos`, libreng plan) at ang database ay nasa `supabase/migrations`. Naka-hash (SHA-256) ang device token at API keys, at walang direktang access sa mga table (RLS na walang policy). Ang **Idiskonekta** ay nagbubura ng kopya sa cloud; nananatili ang data sa device.
+
 ## Folders
 
 ```
 ├── web/                Ang POS mismo (HTML/CSS/JS, offline, IndexedDB)
 ├── android/            Android app: WebView na may laman na web/, Bluetooth printer, Google barcode scanner, auto update
+├── supabase/           Cloud sync, REST at MCP para sa AI agents (Edge Function + migration)
 └── .github/workflows/  android.yml (APK sa Releases), pages.yml (website sa GitHub Pages)
 ```
 

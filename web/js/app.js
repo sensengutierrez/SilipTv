@@ -908,6 +908,7 @@
   // BACKUP / FILES
   // =========================================================
   async function renderBackup() {
+    Cloud.render();
     const last = await DB.getMeta('lastBackup', 0);
     const el = $('#lastBackup');
     if (!last) { el.textContent = t('Hindi pa nakakapag-backup.'); el.className = 'backup-when old'; }
@@ -1393,6 +1394,7 @@
     }
     await Staff.load();
     await Shift.loadOpen();
+    await Cloud.init();
     applyStore();
     I18N.apply();
     bind();

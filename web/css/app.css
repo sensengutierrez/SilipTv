@@ -411,3 +411,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 @media print {
   body * { visibility: hidden; }
 }
+
+/* Cloud at API */
+#cloudCard h4 { margin: 14px 0 8px; font-size: 14px; }
+#cloudCard .item { cursor: default; }
+.copy-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.copy-row input { flex: 1; min-width: 0; font-family: ui-monospace, monospace; font-size: 12px; }
+.guide p { margin: 8px 0; font-size: 14px; line-height: 1.45; }
+.danger-text { color: var(--bad, #b91c1c); }
