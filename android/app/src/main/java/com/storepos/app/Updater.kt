@@ -1,4 +1,4 @@
-package com.padalako.app
+package com.storepos.app
 
 import android.content.Context
 import android.content.Intent
@@ -16,7 +16,7 @@ import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
 /**
- * Auto update: tinitingnan ang pinakabagong release sa GitHub (tag na app-vN).
+ * Auto update: tinitingnan ang pinakabagong release sa GitHub (tag na pos-vN).
  * Kapag mas bago ang N kaysa sa versionCode ng app, ida-download ang APK at bubuksan ang installer.
  * Kaya tuwing may push sa main, gagawa ang GitHub ng bagong APK at makikita ito ng app.
  */
@@ -37,7 +37,7 @@ object Updater {
             http.newCall(r).execute().use { res ->
                 if (!res.isSuccessful) return@withContext null
                 val j = JSONObject(res.body?.string() ?: return@withContext null)
-                val n = j.optString("tag_name").removePrefix("app-v").toIntOrNull() ?: return@withContext null
+                val n = j.optString("tag_name").removePrefix("pos-v").toIntOrNull() ?: return@withContext null
                 var url: String? = null
                 val assets = j.optJSONArray("assets")
                 if (assets != null) for (i in 0 until assets.length()) {
@@ -53,7 +53,7 @@ object Updater {
     suspend fun download(c: Context, rel: Release, progress: (Float) -> Unit): File = withContext(Dispatchers.IO) {
         val dir = File(c.getExternalFilesDir(null) ?: c.cacheDir, "updates").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }
-        val f = File(dir, "PadalaKo-${rel.number}.apk")
+        val f = File(dir, "POS-${rel.number}.apk")
         var total = -1L
         var tries = 0
         while (true) {
