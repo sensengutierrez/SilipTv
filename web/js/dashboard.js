@@ -143,13 +143,14 @@
     $('#dashTrend').innerHTML = valid.length ? trendChart(bk, $('#dashTrend').clientWidth) : '<p class="muted">' + esc(t('Wala pang benta sa panahong ito.')) + '</p>';
 
     // Paraan ng bayad
-    const by = { cash: 0, gcash: 0, card: 0, utang: 0 };
+    const by = {};
+    const add = (label, v) => { by[label] = (by[label] || 0) + v; };
     valid.forEach((s) => {
       const m = s.method || 'cash';
-      if (m === 'utang') { by.utang += Number(s.credit) || 0; by.cash += Number(s.cash) || 0; }
-      else by[m] = (by[m] || 0) + s.total;
+      if (m === 'utang') { add(Receipt.METHOD_LABEL('utang'), Number(s.credit) || 0); if (Number(s.cash)) add(Receipt.METHOD_LABEL('cash'), Number(s.cash)); }
+      else add(s.methodLabel || Receipt.METHOD_LABEL(m), s.total);
     });
-    const parts = Object.keys(by).map((k) => ({ label: Receipt.METHOD_LABEL(k), v: Math.round(by[k] * 100) / 100 }));
+    const parts = Object.keys(by).sort((a, b) => by[b] - by[a]).map((k) => ({ label: k, v: Math.round(by[k] * 1000) / 1000 }));
     $('#dashMethods').innerHTML = donut(parts) || '<p class="muted">' + esc(t('Wala pang benta.')) + '</p>';
 
     // Paubos

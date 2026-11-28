@@ -2,8 +2,8 @@
 (function () {
   'use strict';
   const DB_NAME = 'pos-db';
-  const VERSION = 3;
-  const STORES = ['products', 'sales', 'meta', 'receivings', 'customers', 'payments'];
+  const VERSION = 4;
+  const STORES = ['products', 'sales', 'meta', 'receivings', 'customers', 'payments', 'staff', 'shifts'];
   let dbp = null;
 
   function open() {
@@ -31,6 +31,9 @@
           const s = db.createObjectStore('payments', { keyPath: 'id' });
           s.createIndex('customerId', 'customerId', { unique: false });
         }
+        // v4: staff (may PIN) at shift ng kaha (petty cash)
+        if (!db.objectStoreNames.contains('staff')) db.createObjectStore('staff', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('shifts')) db.createObjectStore('shifts', { keyPath: 'id' });
         const sales = req.transaction.objectStore('sales');
         if (!sales.indexNames.contains('customerId')) sales.createIndex('customerId', 'customerId', { unique: false });
       };
@@ -165,9 +168,8 @@
     },
 
     async exportAll() {
-      const names = ['products', 'sales', 'meta', 'receivings', 'customers', 'payments'];
-      const [products, sales, meta, receivings, customers, payments] = await Promise.all(names.map((n) => DB.all(n)));
-      return { app: 'pos', format: 3, exported: new Date().toISOString(), products, sales, receivings, customers, payments, meta };
+      const [products, sales, meta, receivings, customers, payments, staff, shifts] = await Promise.all(STORES.map((n) => DB.all(n)));
+      return { app: 'pos', format: 4, exported: new Date().toISOString(), products, sales, receivings, customers, payments, staff, shifts, meta };
     },
 
     /** Palitan lahat ng data mula sa backup. */
@@ -177,7 +179,7 @@
       }
       return tx(STORES, 'readwrite', (t) => {
         STORES.forEach((s) => t.objectStore(s).clear());
-        ['receivings', 'customers', 'payments'].forEach((n) => (data[n] || []).forEach((r) => r && r.id && t.objectStore(n).put(r)));
+        ['receivings', 'customers', 'payments', 'staff', 'shifts'].forEach((n) => (data[n] || []).forEach((r) => r && r.id && t.objectStore(n).put(r)));
         data.products.forEach((p) => p && p.id && t.objectStore('products').put(p));
         data.sales.forEach((s) => s && s.id && t.objectStore('sales').put(s));
         (data.meta || []).forEach((m) => m && m.key && t.objectStore('meta').put(m));

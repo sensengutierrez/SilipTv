@@ -1527,5 +1527,381 @@ window.I18N_DICT = {
 "Hanapin ang suki": {
 "en": "Search customers",
 "ar": "ابحث عن عميل"
+},
+"Shift #{n}": {
+"en": "Shift #{n}",
+"ar": "الوردية #{n}"
+},
+"Tala": {
+"en": "Note",
+"ar": "ملاحظة"
+},
+"+ Tala sa order (hal. para kanino, oras ng delivery, mensahe sa card)": {
+"en": "+ Order note (e.g. recipient, delivery time, card message)",
+"ar": "+ ملاحظة الطلب (مثل المستلم، وقت التوصيل، رسالة البطاقة)"
+},
+"Custom item": {
+"en": "Custom item",
+"ar": "صنف مخصص"
+},
+"Para sa gawang-order na wala sa listahan, hal. bouquet, arrangement, o serbisyo.": {
+"en": "For made-to-order items not in the list, e.g. a bouquet, arrangement or service.",
+"ar": "للطلبات الخاصة غير الموجودة في القائمة، مثل باقة أو تنسيق أو خدمة."
+},
+"Pangalan / detalye": {
+"en": "Name / details",
+"ar": "الاسم / التفاصيل"
+},
+"hal. Bouquet 12 red roses": {
+"en": "e.g. Bouquet 12 red roses",
+"ar": "مثال: باقة 12 وردة حمراء"
+},
+"Idagdag sa cart": {
+"en": "Add to cart",
+"ar": "أضف إلى السلة"
+},
+"Ilagay ang pangalan at presyo": {
+"en": "Enter a name and price",
+"ar": "أدخل الاسم والسعر"
+},
+"Decimal": {
+"en": "Decimals",
+"ar": "الخانات العشرية"
+},
+"Auto": {
+"en": "Auto",
+"ar": "تلقائي"
+},
+"hal. BenefitPay, GCash, Bank transfer": {
+"en": "e.g. BenefitPay, GCash, Bank transfer",
+"ar": "مثال: BenefitPay، تحويل بنكي"
+},
+"Payagan ang utang (para sa mga suki)": {
+"en": "Allow credit (for customers)",
+"ar": "السماح بالبيع الآجل (للعملاء)"
+},
+"Tala sa order": {
+"en": "Order note",
+"ar": "ملاحظة الطلب"
+},
+"GCash": {
+"en": "GCash",
+"ar": "GCash"
+},
+"Maya": {
+"en": "Maya",
+"ar": "Maya"
+},
+"BenefitPay": {
+"en": "BenefitPay",
+"ar": "بنفت باي"
+},
+"Bank transfer": {
+"en": "Bank transfer",
+"ar": "تحويل بنكي"
+},
+"Z REPORT (sarado ang shift)": {
+"en": "Z REPORT (shift closed)",
+"ar": "تقرير Z (الوردية مغلقة)"
+},
+"X REPORT (bukas pa ang shift)": {
+"en": "X REPORT (shift open)",
+"ar": "تقرير X (الوردية مفتوحة)"
+},
+"Bukas": {
+"en": "Open",
+"ar": "مفتوحة"
+},
+"Sarado": {
+"en": "Closed",
+"ar": "مغلقة"
+},
+"KAHA (CASH)": {
+"en": "CASH DRAWER",
+"ar": "الصندوق (نقداً)"
+},
+"Opening cash": {
+"en": "Opening cash",
+"ar": "النقد الافتتاحي"
+},
+"+ Cash na benta": {
+"en": "+ Cash sales",
+"ar": "+ مبيعات نقدية"
+},
+"+ Cash na bayad sa utang": {
+"en": "+ Cash credit payments",
+"ar": "+ سداد ديون نقداً"
+},
+"+ Cash in": {
+"en": "+ Cash in",
+"ar": "+ إيداع نقدي"
+},
+"− Cash out / gastos": {
+"en": "− Cash out / expenses",
+"ar": "− سحب نقدي / مصروفات"
+},
+"Dapat nasa kaha": {
+"en": "Expected in drawer",
+"ar": "المتوقع في الصندوق"
+},
+"Binilang": {
+"en": "Counted",
+"ar": "المعدود"
+},
+"KULANG": {
+"en": "SHORT",
+"ar": "عجز"
+},
+"SOBRA": {
+"en": "OVER",
+"ar": "زيادة"
+},
+"Cash in": {
+"en": "Cash in",
+"ar": "إيداع نقدي"
+},
+"Cash out": {
+"en": "Cash out",
+"ar": "سحب نقدي"
+},
+"Buksan ang shift": {
+"en": "Open shift",
+"ar": "فتح الوردية"
+},
+"Ilagay ang perang nasa kaha bago magsimula (opening / petty cash).": {
+"en": "Enter the cash in the drawer before you start (opening / petty cash).",
+"ar": "أدخل النقد الموجود في الصندوق قبل البدء (النقد الافتتاحي / النثرية)."
+},
+"Huling binilang: {x}": {
+"en": "Last count: {x}",
+"ar": "آخر عدّ: {x}"
+},
+"Buksan": {
+"en": "Open",
+"ar": "فتح"
+},
+"Bukas na ang shift #{n}": {
+"en": "Shift #{n} is open",
+"ar": "تم فتح الوردية #{n}"
+},
+"Cash out / gastos": {
+"en": "Cash out / expense",
+"ar": "سحب نقدي / مصروف"
+},
+"Perang idinagdag sa kaha (hal. dagdag na barya).": {
+"en": "Money added to the drawer (e.g. extra coins).",
+"ar": "مال أُضيف إلى الصندوق (مثل فكة إضافية)."
+},
+"Perang kinuha sa kaha (hal. pambili ng yelo, pamasahe, delivery).": {
+"en": "Money taken from the drawer (e.g. supplies, transport, delivery).",
+"ar": "مال أُخذ من الصندوق (مثل مستلزمات، مواصلات، توصيل)."
+},
+"Para saan": {
+"en": "What for",
+"ar": "الغرض"
+},
+"Isara ang shift #{n}": {
+"en": "Close shift #{n}",
+"ar": "إغلاق الوردية #{n}"
+},
+"Binilang na cash sa kaha": {
+"en": "Cash counted in drawer",
+"ar": "النقد المعدود في الصندوق"
+},
+"Isara ang shift": {
+"en": "Close shift",
+"ar": "إغلاق الوردية"
+},
+"Kulang": {
+"en": "Short",
+"ar": "عجز"
+},
+"Ilagay ang binilang na cash": {
+"en": "Enter the counted cash",
+"ar": "أدخل النقد المعدود"
+},
+"Walang bukas na shift": {
+"en": "No open shift",
+"ar": "لا توجد وردية مفتوحة"
+},
+"Bubuksan ito bago ang unang benta. Ilalagay ang opening cash (petty cash) na nasa kaha.": {
+"en": "It opens before the first sale. You'll enter the opening (petty) cash in the drawer.",
+"ar": "تُفتح قبل أول عملية بيع، وستُدخل النقد الافتتاحي في الصندوق."
+},
+"Puwedeng magbenta kahit walang shift. Buksan para mabilang ang kaha.": {
+"en": "You can sell without a shift. Open one to track the cash drawer.",
+"ar": "يمكنك البيع بدون وردية. افتح وردية لتتبع الصندوق."
+},
+"X report": {
+"en": "X report",
+"ar": "تقرير X"
+},
+"Cash in / out": {
+"en": "Cash in / out",
+"ar": "الإيداع / السحب"
+},
+"Wala pang saradong shift.": {
+"en": "No closed shifts yet.",
+"ar": "لا توجد ورديات مغلقة بعد."
+},
+"OK": {
+"en": "OK",
+"ar": "موافق"
+},
+"Ilagay ang PIN": {
+"en": "Enter PIN",
+"ar": "أدخل الرمز"
+},
+"Sino ang gagamit?": {
+"en": "Who's using the POS?",
+"ar": "من سيستخدم النظام؟"
+},
+"Mali ang PIN": {
+"en": "Wrong PIN",
+"ar": "رمز خاطئ"
+},
+"Hello, {n}!": {
+"en": "Hello, {n}!",
+"ar": "مرحباً {n}!"
+},
+"Kailangan ng admin": {
+"en": "Admin required",
+"ar": "يلزم المدير"
+},
+"Ipa-PIN sa admin para ituloy.": {
+"en": "Ask an admin to enter their PIN to continue.",
+"ar": "اطلب من المدير إدخال رمزه للمتابعة."
+},
+"May lock ang POS. Pipili ng pangalan at maglalagay ng PIN bago gumamit. Admin lang ang makakapag-void, makakapagbago ng settings at makakapag-backup.": {
+"en": "The POS is locked. Staff pick their name and enter a PIN. Only admins can void, change settings and back up.",
+"ar": "النظام مقفل. يختار الموظف اسمه ويُدخل رمزه. المدير فقط يمكنه الإلغاء وتغيير الإعدادات والنسخ الاحتياطي."
+},
+"Wala pang staff, kaya bukas ang POS sa lahat. Gumawa muna ng admin (ikaw), tapos idagdag ang mga cashier.": {
+"en": "No staff yet, so the POS is open to everyone. Create an admin (you) first, then add cashiers.",
+"ar": "لا يوجد موظفون بعد، لذا النظام مفتوح للجميع. أنشئ مديراً (أنت) أولاً ثم أضف الكاشير."
+},
+"Admin": {
+"en": "Admin",
+"ar": "مدير"
+},
+"Naka-disable": {
+"en": "Disabled",
+"ar": "معطل"
+},
+"ikaw ngayon": {
+"en": "you",
+"ar": "أنت الآن"
+},
+"+ Bagong staff": {
+"en": "+ New staff",
+"ar": "+ موظف جديد"
+},
+"+ Gumawa ng admin": {
+"en": "+ Create admin",
+"ar": "+ إنشاء مدير"
+},
+"Gumawa ng admin": {
+"en": "Create admin",
+"ar": "إنشاء مدير"
+},
+"Bagong staff": {
+"en": "New staff",
+"ar": "موظف جديد"
+},
+"I-edit ang staff": {
+"en": "Edit staff",
+"ar": "تعديل الموظف"
+},
+"Ikaw ang admin. Tandaan ang PIN mo: kailangan ito para sa void, settings at backup.": {
+"en": "You are the admin. Remember your PIN: it's needed for voids, settings and backups.",
+"ar": "أنت المدير. تذكّر رمزك: يلزم للإلغاء والإعدادات والنسخ الاحتياطي."
+},
+"PIN (4 hanggang 8 numero)": {
+"en": "PIN (4 to 8 digits)",
+"ar": "الرمز (4 إلى 8 أرقام)"
+},
+"Bagong PIN (blangko kung hindi papalitan)": {
+"en": "New PIN (blank to keep)",
+"ar": "رمز جديد (اتركه فارغاً للإبقاء)"
+},
+"Tungkulin": {
+"en": "Role",
+"ar": "الدور"
+},
+"Puwedeng gumamit ng POS": {
+"en": "Can use the POS",
+"ar": "يمكنه استخدام النظام"
+},
+"Ang PIN ay 4 hanggang 8 numero": {
+"en": "PIN must be 4 to 8 digits",
+"ar": "يجب أن يكون الرمز من 4 إلى 8 أرقام"
+},
+"Kailangan ng kahit isang admin": {
+"en": "At least one admin is required",
+"ar": "يلزم مدير واحد على الأقل"
+},
+"Naka-on na ang lock. Ikaw ang admin.": {
+"en": "Lock is on. You are the admin.",
+"ar": "تم تفعيل القفل. أنت المدير."
+},
+"Mananatili ang pangalan niya sa mga lumang resibo.": {
+"en": "Their name stays on old receipts.",
+"ar": "سيبقى اسمه في الإيصالات القديمة."
+},
+"+ Custom item": {
+"en": "+ Custom item",
+"ar": "+ صنف مخصص"
+},
+"Kaha": {
+"en": "Cash drawer",
+"ar": "الصندوق"
+},
+"Staff": {
+"en": "Staff",
+"ar": "الموظفون"
+},
+"Kailangan buksan ang shift (opening cash) bago magbenta": {
+"en": "Require opening a shift (opening cash) before selling",
+"ar": "يجب فتح وردية (نقد افتتاحي) قبل البيع"
+},
+"Mga saradong shift": {
+"en": "Closed shifts",
+"ar": "الورديات المغلقة"
+},
+"Staff at lock": {
+"en": "Staff and lock",
+"ar": "الموظفون والقفل"
+},
+"I-lock ngayon": {
+"en": "Lock now",
+"ar": "اقفل الآن"
+},
+"Kusang mag-lock kapag walang gumagamit": {
+"en": "Auto-lock when idle",
+"ar": "قفل تلقائي عند عدم الاستخدام"
+},
+"Hindi": {
+"en": "Off",
+"ar": "إيقاف"
+},
+"2 minuto": {
+"en": "2 minutes",
+"ar": "دقيقتان"
+},
+"5 minuto": {
+"en": "5 minutes",
+"ar": "5 دقائق"
+},
+"15 minuto": {
+"en": "15 minutes",
+"ar": "15 دقيقة"
+},
+"30 minuto": {
+"en": "30 minutes",
+"ar": "30 دقيقة"
+},
+"Lock": {
+"en": "Lock",
+"ar": "قفل"
 }
 };

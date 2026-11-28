@@ -139,11 +139,11 @@
         const s = r.x;
         return '<button type="button" class="item" data-sale="' + s.id + '"><span class="grow"><div class="nm">#' + s.no + ' · ' + esc(fmtDateTime(s.time)) + '</div>' +
           '<div class="meta">' + esc(s.items.map((i) => i.name).join(', ').slice(0, 70)) + '</div></span><span class="right"><div class="pr">' + money(s.total) + '</div>' +
-          (s.voided ? '<span class="badge void">VOID</span>' : s.credit ? '<span class="badge low">' + esc(t('Utang')) + ' ' + money(s.credit) + '</span>' : '<span class="meta">' + esc(Receipt.METHOD_LABEL(s.method || 'cash')) + '</span>') + '</span></button>';
+          (s.voided ? '<span class="badge void">VOID</span>' : s.credit ? '<span class="badge low">' + esc(t('Utang')) + ' ' + money(s.credit) + '</span>' : '<span class="meta">' + esc(s.methodLabel || Receipt.METHOD_LABEL(s.method || 'cash')) + '</span>') + '</span></button>';
       }
       const p = r.x;
       return '<button type="button" class="item" data-pay="' + p.id + '"><span class="grow"><div class="nm">' + esc(t('Bayad sa utang')) + ' · ' + esc(fmtDateTime(p.time)) + '</div>' +
-        '<div class="meta">' + esc([Receipt.METHOD_LABEL(p.method || 'cash'), p.note].filter(Boolean).join(' · ')) + '</div></span>' +
+        '<div class="meta">' + esc([p.methodLabel || Receipt.METHOD_LABEL(p.method || 'cash'), p.note].filter(Boolean).join(' · ')) + '</div></span>' +
         '<span class="right"><div class="pr ok">−' + money(p.amount) + '</div>' + (p.voided ? '<span class="badge void">VOID</span>' : '') + '</span></button>';
     }).join('') : '<p class="muted">' + esc(t('Wala pang bili.')) + '</p>';
 
@@ -177,6 +177,7 @@
         $('#cvEdit', m).onclick = async () => { close(); await edit(c); view(id); refresh(); };
         $('#cvDel', m).onclick = async () => {
           const msg = bal > 0 ? t('May utang pa siyang {x}. Mawawala ang record ng suki pero mananatili ang mga benta.', { x: money(bal) }) : t('Mananatili ang mga benta sa Dashboard.');
+          if (!(await K().requireAdmin())) return;
           if (!(await confirmBox(t('Burahin si {x}?', { x: c.name }), msg, t('Burahin'), true))) return;
           await DB.del('customers', id);
           close(); refresh(); toast(t('Nabura'));
@@ -201,7 +202,7 @@
       modal(
         '<h2>' + esc(t('Bayad sa utang')) + '</h2><p class="muted">' + esc(c.name) + ' · ' + esc(t('Balanse')) + ': <b>' + money(bal) + '</b></p>' +
         '<label class="field"><span>' + esc(t('Halaga')) + '</span><input id="ppAmt" type="text" inputmode="decimal" autocomplete="off" value="' + (bal > 0 ? bal : '') + '"></label>' +
-        '<div class="seg" id="ppMethod">' + ['cash', 'gcash', 'card'].map((k) => '<button type="button" data-m="' + k + '"' + (k === 'cash' ? ' class="on"' : '') + '>' + esc(Receipt.METHOD_LABEL(k)) + '</button>').join('') + '</div>' +
+        '<div class="seg wrap-seg" id="ppMethod">' + K().methods().map((x) => '<button type="button" data-m="' + esc(x.id) + '"' + (x.id === 'cash' ? ' class="on"' : '') + '>' + esc(x.label) + '</button>').join('') + '</div>' +
         '<label class="field"><span>' + esc(t('Tala (puwedeng wala)')) + '</span><input id="ppNote" type="text"></label>' +
         '<div class="modal-actions"><button class="btn" data-close type="button">' + esc(t('Huwag')) + '</button>' +
         '<button class="btn primary" id="ppOk" type="button">' + esc(t('I-save ang bayad')) + '</button></div>',
@@ -212,7 +213,7 @@
           $('#ppOk', m).onclick = async () => {
             const amount = r2(num(inp.value));
             if (amount <= 0) { toast(t('Ilagay ang halaga'), true); return; }
-            const pay = { id: uid(), customerId: c.id, customerName: c.name, amount, method, note: $('#ppNote', m).value.trim(), time: Date.now(), cashier: K().S.store.cashier || '' };
+            const pay = { id: uid(), customerId: c.id, customerName: c.name, amount, method, methodLabel: Receipt.METHOD_LABEL(method), note: $('#ppNote', m).value.trim(), time: Date.now(), cashier: K().cashierName(), cashierId: K().S.user ? K().S.user.id : '', shiftId: K().shiftId() };
             await DB.put('payments', pay);
             done = { pay, balance: r2(bal - amount) };
             close();
@@ -239,6 +240,7 @@
         bindSend(m, doc, c, t('Bayad sa utang'), 'bayad-' + pay.id);
         const vb = $('#pvVoid', m);
         if (vb) vb.onclick = async () => {
+          if (!(await K().requireAdmin())) return;
           if (!(await confirmBox(t('I-void ang bayad?'), t('Ibabalik sa utang ang halagang ito.'), t('I-void'), true))) return;
           pay.voided = Date.now();
           await DB.put('payments', pay);

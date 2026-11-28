@@ -9,7 +9,25 @@
   const COLORS = ['#1e40af', '#0f766e', '#b91c1c', '#7c3aed', '#c2410c', '#be185d', '#0e7490', '#374151'];
   const UNITS = ['piraso', 'pack', 'sachet', 'bote', 'lata', 'kilo', 'gramo', 'litro', 'box', 'dosena', 'tali', 'tasa'];
 
-  const DEFAULT_STORE = { name: '', address: '', phone: '', tin: '', footer: '', currency: '₱', color: COLORS[0], logo: '', cashier: '', lang: '' };
+  const DEFAULT_STORE = { name: '', address: '', phone: '', tin: '', footer: '', currency: '₱', color: COLORS[0], logo: '', cashier: '', lang: '', methods: null, allowCredit: true, useShift: true, autoLock: 0 };
+  const CURRENCIES = ['₱', 'PHP ', 'BD ', 'BHD ', 'SAR ', 'AED ', 'KWD ', 'QAR ', 'OMR ', '$', 'US$ ', '€', '£', 'RM ', 'S$ ', 'HK$ ', '¥', 'Rp ', '₹'];
+
+  /** Default na paraan ng bayad ayon sa pera (puwedeng palitan sa ⚙). */
+  function defaultMethods(cur) {
+    const c = String(cur || '').trim();
+    if (/^(₱|PHP)/.test(c)) return [{ id: 'cash', label: 'Cash' }, { id: 'gcash', label: 'GCash' }, { id: 'maya', label: 'Maya' }, { id: 'card', label: 'Card' }];
+    if (/^(BD|BHD)/.test(c)) return [{ id: 'cash', label: 'Cash' }, { id: 'benefit', label: 'BenefitPay' }, { id: 'card', label: 'Card' }];
+    return [{ id: 'cash', label: 'Cash' }, { id: 'card', label: 'Card' }, { id: 'transfer', label: 'Bank transfer' }];
+  }
+  /** Mga paraan ng bayad (hindi kasama ang Utang). Laging nauuna ang Cash. */
+  function methods() {
+    const list = (S.store.methods && S.store.methods.length ? S.store.methods : defaultMethods(S.store.currency)).filter((x) => x.id !== 'utang');
+    if (!list.some((x) => x.id === 'cash')) list.unshift({ id: 'cash', label: 'Cash' });
+    return list.map((x) => (x.id === 'cash' || x.id === 'card' ? { ...x, label: t(x.label) } : x));
+  }
+  const dec = () => Receipt.decimalsOf(S.store);
+  const cashierName = () => (S.user ? S.user.name : S.store.cashier || '');
+  const shiftId = () => (window.Shift && Shift.current() ? Shift.current().id : '');
   const DEFAULT_PRINTER = { mode: A ? 'bt' : 'system', address: '', name: '', paper: 58, logo: true, auto: true };
 
   const S = {
@@ -30,9 +48,9 @@
   // ---------- helpers ----------
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = (v) => { const n = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return isFinite(n) ? n : 0; };
-  const r2 = (n) => Math.round(n * 100) / 100;
+  const r2 = (n) => { const f = Math.pow(10, dec()); return Math.round(n * f) / f; };
   const r3 = (n) => Math.round(n * 1000) / 1000;
-  const money = (n) => S.store.currency + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const money = (n) => S.store.currency + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: dec(), maximumFractionDigits: dec() });
   const qtyStr = (n) => String(r3(n));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const pad = (x) => String(x).padStart(2, '0');
@@ -134,7 +152,11 @@
     $('meta[name=theme-color]').setAttribute('content', color);
     if (A && A.setBarColor) try { A.setBarColor(color); } catch (e) { /* luma */ }
     $('#storeName').textContent = st.name || t('Tindahan');
-    $('#storeSub').textContent = st.name ? (st.address || 'POS') : t('Pindutin para ilagay ang pangalan ng tindahan');
+    const who = S.user ? '👤 ' + S.user.name : '';
+    const sh = window.Shift && Shift.current();
+    $('#storeSub').textContent = st.name ? [who, sh ? t('Shift #{n}', { n: sh.no }) : '', who || sh ? '' : (st.address || 'POS')].filter(Boolean).join(' · ') : t('Pindutin para ilagay ang pangalan ng tindahan');
+    $('#lockBtn').hidden = !(window.Staff && Staff.enabled());
+    Receipt.setMethods(methods());
     document.title = st.name ? st.name + ' POS' : 'POS';
     const lg = $('#storeLogo');
     lg.innerHTML = st.logo ? '<img alt="" src="' + esc(st.logo) + '">' : esc((st.name || 'T').trim().charAt(0).toUpperCase());
@@ -182,8 +204,15 @@
 
   // ---------- tabs ----------
   const currentView = () => (($('.view.on') || {}).id || 'view-cashier').replace('view-', '');
+  const ADMIN_VIEWS = ['staff', 'printer', 'backup'];
+  /** Lumipat ng tab; admin lang sa Staff, Printer at Backup. */
+  async function go(view) {
+    if (ADMIN_VIEWS.includes(view) && !(await Staff.requireAdmin())) return;
+    show(view);
+  }
   function show(view) {
-    $$('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.view === view || b.dataset.also === view));
+    if (ADMIN_VIEWS.includes(view) && !Staff.isAdmin()) view = 'shift';
+    $$('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.view === view || (b.dataset.also || '').split(' ').includes(view)));
     $$('.view').forEach((v) => v.classList.toggle('on', v.id === 'view-' + view));
     if (view === 'cashier') renderCashier();
     if (view === 'inventory') renderInventory();
@@ -192,6 +221,8 @@
     if (view === 'sales') renderSales();
     if (view === 'printer') renderPrinter();
     if (view === 'backup') renderBackup();
+    if (view === 'shift') Shift.render();
+    if (view === 'staff') Staff.render();
     window.scrollTo(0, 0);
     try { sessionStorage.setItem('pos-view', view); } catch (e) { /* wala */ }
   }
@@ -241,7 +272,7 @@
     const list = S.products.slice()
       .sort((a, b) => (S.soldCount[b.id] || 0) - (S.soldCount[a.id] || 0) || a.name.localeCompare(b.name))
       .slice(0, 24);
-    $('#quickWrap').hidden = !list.length;
+    $('#quick').hidden = !list.length;
     $('#quick').innerHTML = list.map((p) =>
       '<button type="button" class="tile' + (stockState(p) === 'out' ? ' out' : '') + '" data-id="' + p.id + '">' +
       '<span class="nm">' + esc(p.name) + '</span><span class="pr">' + money(p.price) + '</span></button>').join('');
@@ -281,6 +312,9 @@
       '<div></div></div>').join('');
     const items = S.cart.reduce((s, l) => s + l.qty, 0);
     $('#cartCount').textContent = S.cart.length ? '(' + qtyStr(items) + ')' : '';
+    $('#noteBtn').hidden = !S.cart.length && !S.note;
+    $('#noteBtn').innerHTML = S.note ? '📝 <b>' + esc(t('Tala')) + ':</b> ' + esc(S.note) : esc(t('+ Tala sa order (hal. para kanino, oras ng delivery, mensahe sa card)'));
+    $('#noteBtn').classList.toggle('on', !!S.note);
     $('#clearCart').hidden = !S.cart.length;
     if (!S.cart.length) S.discount = 0;
     const tt = cartTotals();
@@ -296,9 +330,10 @@
     const chips = [];
     if (total > 0) {
       chips.push([t('Sakto'), total]);
-      [20, 50, 100, 200, 500, 1000].forEach((b) => {
-        const v = Math.ceil(total / b) * b;
-        if (v > total && !chips.some((c) => c[1] === v)) chips.push([money(v).replace('.00', ''), v]);
+      const notes = dec() === 3 ? [0.5, 1, 5, 10, 20] : /^(₱|PHP)/.test(S.store.currency.trim()) ? [20, 50, 100, 200, 500, 1000] : [1, 5, 10, 20, 50, 100];
+      notes.forEach((b) => {
+        const v = r2(Math.ceil(total / b) * b);
+        if (v > total && !chips.some((c) => c[1] === v)) chips.push([money(v).replace(/\.0+$/, ''), v]);
       });
     }
     $('#cashChips').innerHTML = chips.slice(0, 5).map((c) => '<button type="button" class="chip" data-v="' + c[1] + '">' + esc(c[0]) + '</button>').join('');
@@ -319,6 +354,22 @@
     if (!c && S.method === 'utang') S.method = 'cash';
     renderCustomerBtn();
     renderMethod();
+  }
+
+  function renderMethodButtons() {
+    const list = methods().concat(S.store.allowCredit !== false ? [{ id: 'utang', label: t('Utang') }] : []);
+    if (!list.some((x) => x.id === S.method)) S.method = 'cash';
+    const el = $('#payMethod');
+    el.style.gridTemplateColumns = 'repeat(' + Math.min(list.length, 4) + ', 1fr)';
+    el.innerHTML = list.map((x) => '<button type="button" data-m="' + esc(x.id) + '">' + esc(x.label) + '</button>').join('');
+    $$('#payMethod button').forEach((b) => b.addEventListener('click', async () => {
+      S.method = b.dataset.m;
+      if (S.method === 'utang' && !S.customer) {
+        const c = await Customers.pick(null);
+        if (c) await setCustomer(c); else S.method = 'cash';
+      }
+      renderMethod();
+    }));
   }
 
   function renderMethod() {
@@ -364,7 +415,28 @@
       : p.mode === 'system' ? t('Printer: ordinaryong print') : t('Hindi magpi-print ng resibo');
   }
 
-  function renderCashier() { renderQuick(); renderCart(); renderPrinterLine(); renderCustomerBtn(); renderMethod(); }
+  function renderCashier() { renderQuick(); renderMethodButtons(); renderCart(); renderPrinterLine(); renderCustomerBtn(); renderMethod(); }
+
+  async function customItem() {
+    modal(
+      '<h2>' + esc(t('Custom item')) + '</h2><p class="muted">' + esc(t('Para sa gawang-order na wala sa listahan, hal. bouquet, arrangement, o serbisyo.')) + '</p>' +
+      '<label class="field"><span>' + esc(t('Pangalan / detalye')) + '</span><input id="ciName" type="text" placeholder="' + esc(t('hal. Bouquet 12 red roses')) + '"></label>' +
+      '<div class="field-row"><label class="field"><span>' + esc(t('Presyo')) + '</span><input id="ciPrice" type="text" inputmode="decimal"></label>' +
+      '<label class="field"><span>' + esc(t('Puhunan (puwedeng wala)')) + '</span><input id="ciCost" type="text" inputmode="decimal"></label></div>' +
+      '<div class="modal-actions"><button class="btn" data-close type="button">' + esc(t('Huwag')) + '</button><button class="btn primary" id="ciOk" type="button">' + esc(t('Idagdag sa cart')) + '</button></div>',
+      (m, close) => {
+        setTimeout(() => $('#ciName', m).focus(), 60);
+        $('#ciOk', m).onclick = () => {
+          const name = $('#ciName', m).value.trim();
+          const price = r2(num($('#ciPrice', m).value));
+          if (!name || price <= 0) { toast(t('Ilagay ang pangalan at presyo'), true); return; }
+          const cost = $('#ciCost', m).value.trim();
+          S.cart.push({ productId: 'custom:' + uid(), custom: true, name, price, cost: cost === '' ? '' : r2(num(cost)), unit: '', qty: 1 });
+          beep(); close(); renderCart();
+        };
+      }
+    );
+  }
 
   async function pay() {
     if (!S.cart.length) return;
@@ -378,6 +450,8 @@
     if (utang && cust.limit !== '' && cust.limit != null && cust._bal + (tt.total - cash) > num(cust.limit)) {
       if (!(await confirmBox(t('Lampas sa limit ng utang'), t('{n}: magiging {x} ang utang (limit {l}). Ituloy pa rin?', { n: cust.name, x: money(cust._bal + tt.total - cash), l: money(cust.limit) }), t('Ituloy')))) return;
     }
+    const shift = await Shift.ensureOpen();
+    if (S.store.useShift !== false && !shift) return;
     $('#payBtn').disabled = true;
     try {
       const no = (await DB.getMeta('seq', 0)) + 1;
@@ -386,11 +460,13 @@
         id: uid(), no, time: Date.now(),
         items: S.cart.map((l) => ({ ...l })),
         subtotal: tt.subtotal, discount: tt.discount, total: tt.total,
-        method: S.method,
+        method: S.method, methodLabel: Receipt.METHOD_LABEL(S.method),
         cash: r2(cash), change: utang ? 0 : r2(cash - tt.total),
         credit: utang ? r2(tt.total - cash) : 0,
-        cashier: S.store.cashier || '',
+        cashier: cashierName(), cashierId: S.user ? S.user.id : '',
+        shiftId: shift ? shift.id : '',
       };
+      if (S.note) sale.note = S.note;
       if (cust) {
         sale.customerId = cust.id; sale.customerName = cust.name;
         if (utang) sale.balanceAfter = r2(cust._bal + sale.credit);
@@ -399,7 +475,7 @@
       sale.items.forEach((l) => { S.soldCount[l.productId] = r3((S.soldCount[l.productId] || 0) + l.qty); });
       await DB.setMeta('soldCount', S.soldCount);
       await reloadProducts();
-      S.cart = []; S.discount = 0; $('#cash').value = '';
+      S.cart = []; S.discount = 0; S.note = ''; $('#cash').value = '';
       S.method = 'cash';
       await setCustomer(null);
       renderCashier();
@@ -740,6 +816,7 @@
         Customers.bindSend(m, saleDoc(sale), cust, t('Resibo #{n}', { n: sale.no }), 'resibo-' + sale.no);
         const vb = $('#vsVoid', m);
         if (vb) vb.onclick = async () => {
+          if (!(await Staff.requireAdmin())) return;
           if (!(await confirmBox(t('I-void ang resibo #{n}?', { n: sale.no }), t('Hindi na ito bibilangin sa benta at ibabalik ang stock ng mga paninda.'), t('I-void'), true))) return;
           await DB.voidSale(sale.id, '');
           sale.items.forEach((l) => { S.soldCount[l.productId] = Math.max(0, r3((S.soldCount[l.productId] || 0) - l.qty)); });
@@ -908,7 +985,9 @@
     try {
       await DB.importAll(data);
       await loadAll();
-      S.cart = [];
+      await Staff.load(); await Shift.loadOpen();
+      S.cart = []; S.user = null; applyStore();
+      if (Staff.enabled()) setTimeout(() => Staff.lock(), 300);
       I18N.apply();
       toast(t('Naibalik ang backup'));
       show('cashier');
@@ -1023,7 +1102,11 @@
       '<label class="field"><span>' + esc(t('Dagdag na linya sa resibo (hal. permit/TIN, puwedeng wala)')) + '</span><input id="sTin" type="text" value="' + esc(st.tin) + '"></label>' +
       '<label class="field"><span>' + esc(t('Mensahe sa dulo ng resibo')) + '</span><input id="sFooter" type="text" value="' + esc(st.footer) + '"></label>' +
       '<div class="field-row"><label class="field"><span>' + esc(t('Simbolo ng pera')) + '</span><select id="sCur">' +
-      ['₱', 'PHP ', '$', 'BD ', 'SAR ', 'AED ', 'KWD ', 'QAR ', 'OMR '].map((c) => '<option' + (c === st.currency ? ' selected' : '') + ' value="' + c + '">' + c.trim() + '</option>').join('') + '</select></label><span></span></div>' +
+      CURRENCIES.concat(CURRENCIES.includes(st.currency) ? [] : [st.currency]).map((c) => '<option' + (c === st.currency ? ' selected' : '') + ' value="' + esc(c) + '">' + esc(c.trim()) + '</option>').join('') + '</select></label>' +
+      '<label class="field"><span>' + esc(t('Decimal')) + '</span><select id="sDec"><option value="">' + esc(t('Auto')) + '</option><option value="0">0</option><option value="2">2 (0.00)</option><option value="3">3 (0.000)</option></select></label></div>' +
+      '<div class="field"><span>' + esc(t('Paraan ng bayad')) + '</span><div class="method-edit" id="sMethods"></div>' +
+      '<div class="toolbar" style="margin-top:6px"><input id="sMethodNew" type="text" placeholder="' + esc(t('hal. BenefitPay, GCash, Bank transfer')) + '"><button class="btn ghost" id="sMethodAdd" type="button">' + esc(t('Idagdag')) + '</button></div>' +
+      '<label class="switch"><input type="checkbox" id="sCredit"' + (st.allowCredit !== false ? ' checked' : '') + '><span>' + esc(t('Payagan ang utang (para sa mga suki)')) + '</span></label></div>' +
       '<div class="field"><span>' + esc(t('Kulay ng app')) + '</span><div class="swatches">' +
       COLORS.map((c) => '<button type="button" class="swatch' + (c === st.color ? ' on' : '') + '" data-c="' + c + '" style="background:' + c + '" aria-label="' + c + '"></button>').join('') + '</div></div>' +
       '<div class="modal-actions">' + (first ? '' : '<button class="btn" data-close type="button">' + esc(t('Huwag')) + '</button>') +
@@ -1034,6 +1117,24 @@
           $('#sLogoRm', m).hidden = !st.logo;
         };
         drawLogo();
+        $('#sDec', m).value = st.decimals == null ? '' : String(st.decimals);
+        let mlist = (st.methods && st.methods.length ? st.methods : defaultMethods(st.currency)).map((x) => ({ ...x }));
+        let customized = !!(st.methods && st.methods.length);
+        const drawMethods = () => {
+          $('#sMethods', m).innerHTML = mlist.map((x, i) => '<span class="chip on">' + esc(x.id === 'cash' || x.id === 'card' ? t(x.label) : x.label) +
+            (x.id === 'cash' ? '' : ' <button type="button" class="chip-x" data-i="' + i + '" aria-label="×">×</button>') + '</span>').join('');
+          $$('#sMethods .chip-x', m).forEach((b) => b.addEventListener('click', () => { mlist.splice(Number(b.dataset.i), 1); customized = true; drawMethods(); }));
+        };
+        drawMethods();
+        $('#sCur', m).addEventListener('change', (e) => { if (!customized) { mlist = defaultMethods(e.target.value); drawMethods(); } });
+        const addMethod = () => {
+          const v = $('#sMethodNew', m).value.trim();
+          if (!v) return;
+          if (!mlist.some((x) => x.label.toLowerCase() === v.toLowerCase())) mlist.push({ id: v.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + uid().slice(-3), label: v });
+          $('#sMethodNew', m).value = ''; customized = true; drawMethods();
+        };
+        $('#sMethodAdd', m).onclick = addMethod;
+        $('#sMethodNew', m).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addMethod(); } });
         $$('#sLang button', m).forEach((b) => b.addEventListener('click', () => {
           // Palitan agad ang language at buksan ulit ang form sa bagong language
           const keep = { name: $('#sName', m).value, address: $('#sAddr', m).value, phone: $('#sPhone', m).value, cashier: $('#sCashier', m).value, tin: $('#sTin', m).value };
@@ -1066,6 +1167,9 @@
           st.tin = $('#sTin', m).value.trim();
           st.footer = $('#sFooter', m).value.trim();
           st.currency = $('#sCur', m).value;
+          st.decimals = $('#sDec', m).value === '' ? null : Number($('#sDec', m).value);
+          st.methods = customized ? mlist : null;
+          st.allowCredit = $('#sCredit', m).checked;
           st.lang = I18N.lang;
           S.store = st;
           await saveStore();
@@ -1082,9 +1186,15 @@
   // EVENTS
   // =========================================================
   function bind() {
-    $$('.tabs button').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
-    $('#storeBtn').onclick = () => editStore(false);
-    $('#settingsBtn').onclick = () => editStore(false);
+    $$('.tabs button').forEach((b) => b.addEventListener('click', () => go(b.dataset.view)));
+    $('#storeBtn').onclick = async () => { if (await Staff.requireAdmin()) editStore(false); };
+    $('#settingsBtn').onclick = async () => { if (await Staff.requireAdmin()) editStore(false); };
+    $('#customItem').onclick = customItem;
+    $('#noteBtn').onclick = async () => {
+      const v = await promptText(t('Tala sa order'), S.note || '');
+      if (v == null) return;
+      S.note = v; renderCart();
+    };
     $('#langBtn').onclick = pickLanguage;
 
     // Search + USB/Bluetooth barcode scanner (nagta-type at nag-e-Enter)
@@ -1147,14 +1257,6 @@
       const c = await Customers.pick(S.customer && S.customer.id);
       if (c !== undefined) await setCustomer(c);
     };
-    $$('#payMethod button').forEach((b) => b.addEventListener('click', async () => {
-      S.method = b.dataset.m;
-      if (S.method === 'utang' && !S.customer) {
-        const c = await Customers.pick(null);
-        if (c) await setCustomer(c); else S.method = 'cash';
-      }
-      renderMethod();
-    }));
     $('#discBtn').onclick = async () => {
       if (!S.cart.length) { toast(t('Wala pang laman ang cart')); return; }
       const { subtotal } = cartTotals();
@@ -1173,7 +1275,9 @@
     // Receiving at Suki
     Receiving.bind();
     Customers.bind();
-    $$('.subnav [data-go]').forEach((b) => b.addEventListener('click', () => show(b.dataset.go)));
+    $$('.subnav [data-go]').forEach((b) => b.addEventListener('click', () => go(b.dataset.go)));
+    Staff.bind();
+    Shift.bind();
     $('#dashLowBtn').onclick = () => { S.invFilter = 'low'; show('inventory'); };
     $('#dashDebtBtn').onclick = () => show('customers');
 
@@ -1214,8 +1318,9 @@
       const v = await promptText(t('I-type ang {w} para ituloy', { w: word }), '');
       if (v !== word) { if (v != null) toast(t('Hindi tugma, walang binura')); return; }
       await DB.clearAll();
-      S.cart = [];
+      S.cart = []; S.user = null;
       await loadAll();
+      await Staff.load(); await Shift.loadOpen(); applyStore();
       show('cashier');
       editStore(true);
     };
@@ -1241,6 +1346,7 @@
 
   // Android back button: isara ang modal muna
   window.__posBack = function () {
+    if (document.getElementById('lockScreen')) return false;
     const w = document.querySelectorAll('.modal-wrap');
     if (w.length) { w[w.length - 1].remove(); return true; }
     const sc = document.querySelector('.scan-overlay .scan-close');
@@ -1274,6 +1380,7 @@
   window.POSKIT = {
     S, $, $$, t, esc, num, r2, r3, money, qtyStr, uid, dayKey, fmtDateTime, toast, modal, confirmBox, promptText, promptArea,
     byId, byBarcode, reloadProducts, receiptDoc, saveBlob, pad, locale, viewSale, printDoc,
+    methods, cashierName, shiftId, applyStore, requireAdmin: () => Staff.requireAdmin(),
   };
 
   async function start() {
@@ -1284,12 +1391,16 @@
       document.body.innerHTML = '<p style="padding:20px">' + esc(t('Hindi mabuksan ang database')) + ': ' + esc(e.message) + '</p>';
       return;
     }
+    await Staff.load();
+    await Shift.loadOpen();
+    applyStore();
     I18N.apply();
     bind();
     let v = 'cashier';
     try { v = sessionStorage.getItem('pos-view') || 'cashier'; } catch (e) { /* wala */ }
     show(v);
     if (!S.store.name) editStore(true);
+    else if (Staff.enabled()) Staff.lock();
     registerSW();
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   }
