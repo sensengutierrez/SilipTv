@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
  * Kaya tuwing may push sa main, gagawa ang GitHub ng bagong APK at makikita ito ng app.
  */
 object Updater {
-    const val REPO = "sensengutierrez/SilipTv"
+    const val REPO = "sensengutierrez/tindahan-pos"
 
     private val http: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)

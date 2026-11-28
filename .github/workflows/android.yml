@@ -1,5 +1,5 @@
 # Gumagawa ng POS app (APK) at inilalagay sa GitHub Releases.
-# Download: https://github.com/sensengutierrez/SilipTv/releases/latest/download/POS.apk
+# Download: https://github.com/sensengutierrez/tindahan-pos/releases/latest/download/POS.apk
 # Sa ibang branch (claude/...), bina-build lang para ma-check; sa main lang naglalabas ng release.
 name: Build Android app
 on:
