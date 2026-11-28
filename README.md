@@ -6,8 +6,8 @@ Gumagana sa **Android phone (APK)** at bilang **website** (puwedeng i-install sa
 
 ## I-download / buksan
 
-- Android: https://github.com/sensengutierrez/SilipTv/releases/latest/download/POS.apk
-- Website: https://sensengutierrez.github.io/SilipTv/ (sa Chrome, "Install app" o "Add to Home screen")
+- Android: https://github.com/sensengutierrez/tindahan-pos/releases/latest/download/POS.apk
+- Website: https://sensengutierrez.github.io/tindahan-pos/ (sa Chrome, "Install app" o "Add to Home screen")
 
 ## Mga tab
 

@@ -1,5 +1,5 @@
 # I-deploy ang web/ (POS website) sa GitHub Pages tuwing may push sa main.
-# Website: https://sensengutierrez.github.io/SilipTv/
+# Website: https://sensengutierrez.github.io/tindahan-pos/
 name: Deploy POS website
 on:
   push:
